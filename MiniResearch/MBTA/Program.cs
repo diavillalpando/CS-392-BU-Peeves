@@ -29,9 +29,11 @@ class Program
         Console.Write("Enter your choice: ");
         int stopChoice = int.Parse(Console.ReadLine()) - 1;
         string stopId = stops[stopChoice];
+        Console.WriteLine(stopId);
 
         string arrivalTime = await GetNextTrainArrivalTime(stopId, direction);
-        Console.WriteLine($"The next train is expected to arrive at {arrivalTime}");
+        string status = await GetNextTrainStatus(stopId, direction);
+        Console.WriteLine($"The next train is expected to arrive at {arrivalTime} status : {status}");
         Console.ReadKey();
     }
 
@@ -70,6 +72,33 @@ class Program
                 PredictionResponse predictionsResponse = (PredictionResponse)serializer.ReadObject(stream);
                 string st=predictionsResponse.Data.Select(prediction => prediction.Attributes.ArrivalTime).FirstOrDefault();
                 return st;
+            }
+            else
+            {
+                throw new Exception($"Failed to fetch arrival time for {direction} train at {stop}. Status code: {response.StatusCode}");
+            }
+        }
+    }
+
+    static async Task<string> GetNextTrainStatus(string stop, string direction) 
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            var apiKey = "5e809ee23cfb47d9ae73f773da5e4d8e";
+            var baseUrl = "https://api-v3.mbta.com/predictions";
+            HttpResponseMessage response = await client.GetAsync($"{baseUrl}?filter[route]=Green-B&filter[direction_id]={direction}&filter[stop]={stop}&sort=departure_time&api_key={apiKey}");
+            if (response.IsSuccessStatusCode)
+            {
+                string responseBody = await response.Content.ReadAsStringAsync();
+                MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(responseBody));
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(StatusResponse));
+                StatusResponse statusResponse = (StatusResponse)serializer.ReadObject(stream);
+                string st = statusResponse.Data.Select(statusData => statusData.Attributes.Status).First();
+                if ( st != null ) 
+                {
+                    return st;
+                }
+                return "Status not updated";
             }
             else
             {
@@ -119,4 +148,25 @@ public class PredictionAttributes
 {
     [DataMember(Name = "arrival_time")]
     public string ArrivalTime { get; set; }
+}
+
+[DataContract]
+public class StatusResponse
+{
+    [DataMember(Name = "data")]
+    public List<StatusData> Data { get; set; }
+}
+
+[DataContract]
+public class StatusData
+{
+    [DataMember(Name = "attributes")]
+    public StatusAttributes Attributes { get; set; }
+}
+
+[DataContract]
+public class StatusAttributes
+{
+    [DataMember(Name = "status")]
+    public string Status { get; set; }
 }
