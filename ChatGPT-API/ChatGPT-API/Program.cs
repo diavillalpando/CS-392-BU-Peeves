@@ -36,5 +36,7 @@ else
     }
     Console.WriteLine($"{completionResult.Error.Code}: {completionResult.Error.Message}");
 }
+Console.WriteLine("Press any key to exit...");
+Console.ReadKey();
 
 
