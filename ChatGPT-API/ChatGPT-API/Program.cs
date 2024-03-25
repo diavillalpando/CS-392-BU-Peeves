@@ -29,6 +29,10 @@ class Program
             Console.WriteLine("Give prompt: ");
 
             prompt = Console.ReadLine();
+            if (string.IsNullOrEmpty(prompt))
+            {
+                break;
+            }
 
             var completionResult = await openAIService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
             {
