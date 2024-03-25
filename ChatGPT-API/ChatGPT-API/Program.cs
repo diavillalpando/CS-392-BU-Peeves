@@ -41,7 +41,7 @@ class Program
                 MaxTokens = 50
             });
 
-            if (completionResult.Successful && completionResult.Choices.Count > 0) // Check if choices exist
+            if (completionResult.Successful && completionResult.Choices.Count > 0) 
             {
                 Console.WriteLine(completionResult.Choices.First().Message.Content);
             }
