@@ -7,5 +7,3 @@
 - SongYu Chen
 - Addison Baum
 
-### Note:
-For the most updated version, see MiniResearchAPIs
