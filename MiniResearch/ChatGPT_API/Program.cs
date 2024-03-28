@@ -7,6 +7,8 @@ using OpenAI.GPT3.ObjectModels.RequestModels;
 using OpenAI.GPT3.ObjectModels;
 using System.Reflection.Metadata.Ecma335;
 using OpenAI.Managers;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 class Program
 {
@@ -23,7 +25,7 @@ class Program
         });
 
         string prompt;
-        
+
         // a while loop that continuously receives prompts from the user unless they enter an empty string
         do
         {
@@ -36,7 +38,7 @@ class Program
             {
                 break;
             }
-            
+
             // generating completion for the user
             var completionResult = await openAIService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
             {
@@ -50,7 +52,7 @@ class Program
             });
 
             // if the competion was successful, send the output
-            if (completionResult.Successful && completionResult.Choices.Count > 0) 
+            if (completionResult.Successful && completionResult.Choices.Count > 0)
             {
                 Console.WriteLine(completionResult.Choices.First().Message.Content);
             }
