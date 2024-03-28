@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatGPT-API", "ChatGPT-API\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MBTA_API", "MBTA_API\MBTA_API.csproj", "{E104D183-EB08-47CD-AE96-45F0A267B37C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleMaps_API", "GoogleMaps_API\GoogleMaps_API.csproj", "{7EB285FF-E838-45A2-8AD2-A25D091B3767}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMapsAPI", "GMapsAPI\GMapsAPI.csproj", "{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{E104D183-EB08-47CD-AE96-45F0A267B37C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E104D183-EB08-47CD-AE96-45F0A267B37C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E104D183-EB08-47CD-AE96-45F0A267B37C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7EB285FF-E838-45A2-8AD2-A25D091B3767}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7EB285FF-E838-45A2-8AD2-A25D091B3767}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7EB285FF-E838-45A2-8AD2-A25D091B3767}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7EB285FF-E838-45A2-8AD2-A25D091B3767}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
