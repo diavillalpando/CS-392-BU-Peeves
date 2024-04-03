@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MBTA_API", "MBTA_API\MBTA_A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GMapsAPI", "GMapsAPI\GMapsAPI.csproj", "{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gmail_API", "Gmail_API\Gmail_API.csproj", "{96D5D401-0FF6-4014-80A8-C0D54876A9D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A19DE557-8A6B-49CE-A3C1-938FECB0C0C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96D5D401-0FF6-4014-80A8-C0D54876A9D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96D5D401-0FF6-4014-80A8-C0D54876A9D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96D5D401-0FF6-4014-80A8-C0D54876A9D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96D5D401-0FF6-4014-80A8-C0D54876A9D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
