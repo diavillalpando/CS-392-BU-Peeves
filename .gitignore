@@ -5,7 +5,7 @@
 
 # Files that contain API Keys
 BuStudentAssistant/appsettings.Development.json
-BuStudentAssistant/appsetting.json
+BuStudentAssistant/appsettings.json
 
 # User-specific files
 *.rsuser
