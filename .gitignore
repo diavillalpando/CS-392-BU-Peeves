@@ -4,8 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Files that contain API Keys
-appsettings.Development.json
-appsetting.json
+BuStudentAssistant/appsettings.Development.json
+BuStudentAssistant/appsetting.json
 
 # User-specific files
 *.rsuser
