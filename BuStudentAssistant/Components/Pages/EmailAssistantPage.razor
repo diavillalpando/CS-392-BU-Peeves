@@ -1,0 +1,283 @@
+﻿@page "/emailAssistant"
+@using Google.Apis.Gmail.v1
+@using Google.Apis.Gmail.v1.Data
+@using Google.Apis.Services
+@using Google.Apis.Auth.OAuth2
+@using System.Threading.Tasks
+@using System.Text
+@using OpenAI.GPT3;
+@using OpenAI.GPT3.Interfaces;
+@using OpenAI.GPT3.Managers;
+@using OpenAI.GPT3.ObjectModels.RequestModels;
+@using OpenAI.GPT3.ObjectModels;
+@using System.Reflection.Metadata.Ecma335
+@using System.Text.Json
+
+<PageTitle>Email Assistant</PageTitle>
+
+<h3>Email Assistant</h3>
+
+
+@if (loading)
+{
+    <p>Loading...</p>
+}
+else if (error)
+{
+    <p>Error occurred while loading emails. @errorMessage</p>
+}
+else if (messageSummaries != null)
+{
+    <ul>
+        @foreach (var message in messageSummaries)
+        {
+            <li>
+                <div>
+                    @if (message!= null)
+                    {
+                        <strong>From:</strong> @message.From <br />
+                        <strong>To:</strong> @message.To <br />
+                        <strong>Subject:</strong> @message.Subject <br />
+                        <strong>Summary:</strong> @(message.SummarizedBody.ToString()) <br />
+                        <br />
+                    }
+                    else
+                    {
+                        <div>No content available for this message.</div>
+                    }
+                </div>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No emails found.</p>
+}
+
+@code {
+    private IList<Message> messages;
+    private List<Message> displayedMessages;
+    private List<EmailMessage> messageSummaries = new List<EmailMessage>();
+    private bool loading = true;
+    private bool error = false;
+    private const int MaxDisplayedMessages = 5;
+    private string api_key = "";
+    string googleClientId = "";
+    string googleClientSecret = "";
+    private string errorMessage= "nothing";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmails();
+    }
+
+    public class EmailMessage
+    {
+        public string From { get; set; }
+        public string To { get; set; }
+        public string Subject { get; set; }
+        public string SummarizedBody { get; set; }
+    }
+
+
+    private async Task LoadEmails()
+    {
+        try
+        {
+            var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+               new ClientSecrets
+                   {
+                       ClientId = googleClientId,
+                       ClientSecret = googleClientSecret
+                   },
+               new[] { GmailService.ScopeConstants.GmailReadonly },
+               "user",
+               CancellationToken.None);
+
+            var gmailService = new GmailService(new BaseClientService.Initializer
+                {
+                    HttpClientInitializer = credential
+                });
+
+            EmailGetter emailGetter = new EmailGetter(credential);
+            messages = emailGetter.GetMessages("me").Take(MaxDisplayedMessages).ToList();
+            displayedMessages = messages.ToList();
+
+            foreach (var message in displayedMessages)
+            {
+                messageSummaries.Add(new EmailMessage
+                    {
+                        From = GetSenderEmailAddress(message),
+                        To = GetRecipientEmailAddress(message),
+                        Subject = GetMessageSubject(message),
+                        SummarizedBody = await GetMessageSummary(message)
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            error = true;
+            errorMessage = ex.Message.ToString();
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+
+
+    private static string GetMessageBody(Message message)
+    {
+        string body = "";
+
+        if (message.Payload.Body != null && message.Payload.Body.Data != null)
+        {
+            body = DecodeBody(message.Payload.Body);
+        }
+        else if (message.Payload.Parts != null)
+        {
+            foreach (var part in message.Payload.Parts)
+            {
+                if (part.MimeType == "text/plain" && part.Body != null && part.Body.Data != null)
+                {
+                    body = DecodeBody(part.Body);
+                    break;
+                }
+            }
+        }
+
+        return body;
+    }
+
+    private static string DecodeBody(MessagePartBody body)
+    {
+        string data = body.Data;
+        byte[] dataBytes = FromBase64Url(data);
+        return Encoding.UTF8.GetString(dataBytes);
+    }
+
+    private static byte[] FromBase64Url(string base64Url)
+    {
+        string paddedBase64 = base64Url.Length % 4 == 0 ? base64Url : base64Url + "====".Substring(base64Url.Length % 4);
+        string base64 = paddedBase64.Replace("_", "/").Replace("-", "+");
+        return Convert.FromBase64String(base64);
+    }
+
+
+
+
+    private string GetSenderEmailAddress(Message message)
+    {
+        var fromHeader = message.Payload.Headers.FirstOrDefault(h => h.Name == "From");
+        return fromHeader?.Value;
+    }
+    private string GetRecipientEmailAddress(Message message)
+    {
+        var fromHeader = message.Payload.Headers.FirstOrDefault(h => h.Name == "To");
+        return fromHeader?.Value;   
+    }
+    private string GetMessageSubject(Message message)
+    {
+        var subjectHeader = message.Payload.Headers.FirstOrDefault(h => h.Name == "Subject");
+        return subjectHeader?.Value;
+    }
+
+    private async Task<string> GetMessageSummary(Message message)
+    {
+        var body = GetMessageBody(message);
+        string summed = await Summary(body);
+        return summed;
+    }
+
+    private async Task<string> Summary(string messageBody)
+    {
+        try
+        {
+            var openAIService = new OpenAI.GPT3.Managers.OpenAIService(new OpenAiOptions()
+                {
+                    ApiKey = api_key
+                });
+            var completionResult = await openAIService.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+            {
+                Messages = new List<ChatMessage>
+                {
+                    ChatMessage.FromSystem("You are an email summarization helper"),
+                    ChatMessage.FromUser($"Summarize this {messageBody}")
+                },
+                Model = Models.ChatGpt3_5Turbo,
+                MaxTokens = 100
+            });
+
+            if (completionResult.Successful && completionResult.Choices.Count > 0)
+            {
+                return completionResult.Choices.First().Message.Content;
+            }
+            else
+            {
+                return ("Completion result was not successful");    
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred while generating summary: {ex.Message}");
+            return "Error occurred while generating summary";
+        }
+        
+    }
+
+
+
+
+
+
+    internal class EmailGetter
+    {
+        private readonly UserCredential _credential;
+
+        public EmailGetter(UserCredential credential)
+        {
+            _credential = credential;
+        }
+
+        public IEnumerable<Message> GetMessages(string userId, string[] labels = null, bool includeSpamAndTrash = false)
+        {
+            if (string.IsNullOrEmpty(userId))
+                throw new ArgumentNullException(nameof(userId));
+
+            using (var gmailService = new GmailService(new BaseClientService.Initializer() { HttpClientInitializer = _credential }))
+            {
+                var listMessagesRequest = gmailService.Users.Messages.List(userId);
+                listMessagesRequest.IncludeSpamTrash = includeSpamAndTrash;
+
+                if (labels != null)
+                    listMessagesRequest.LabelIds = labels;
+
+                bool hasNext = true;
+                while (hasNext)
+                {
+                    var messages = listMessagesRequest.Execute();
+                    hasNext = !string.IsNullOrEmpty(messages.NextPageToken);
+
+                    foreach (var message in messages.Messages)
+                        yield return GetSingleMessage(userId, message.Id, gmailService);
+
+                    listMessagesRequest.PageToken = messages.NextPageToken;
+                }
+            }
+        }
+
+        private Message GetSingleMessage(string userId, string messageId, GmailService service)
+        {
+            var getSingleMessageRequest = service.Users.Messages.Get(userId, messageId);
+            getSingleMessageRequest.Format = UsersResource.MessagesResource.GetRequest.FormatEnum.Full;
+            getSingleMessageRequest.MetadataHeaders = new[] { "From", "To" };
+
+            return getSingleMessageRequest.Execute();
+        }
+    }
+}
+
+
