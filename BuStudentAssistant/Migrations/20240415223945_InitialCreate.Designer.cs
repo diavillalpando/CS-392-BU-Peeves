@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BuStudentAssistant.Migrations
 {
     [DbContext(typeof(PlacesContext))]
-    [Migration("20240415201845_InitialCreate")]
+    [Migration("20240415223945_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -39,14 +39,12 @@ namespace BuStudentAssistant.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PlaceName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("stars")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("ReviewId");
 
@@ -57,9 +55,13 @@ namespace BuStudentAssistant.Migrations
 
             modelBuilder.Entity("Review", b =>
                 {
-                    b.HasOne("Place", null)
+                    b.HasOne("Place", "Place")
                         .WithMany("Reviews")
-                        .HasForeignKey("PlaceName");
+                        .HasForeignKey("PlaceName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Place");
                 });
 
             modelBuilder.Entity("Place", b =>

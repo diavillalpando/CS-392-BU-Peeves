@@ -29,8 +29,7 @@ namespace BuStudentAssistant.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
                     Content = table.Column<string>(type: "TEXT", nullable: false),
-                    stars = table.Column<int>(type: "INTEGER", nullable: false),
-                    PlaceName = table.Column<string>(type: "TEXT", nullable: true)
+                    PlaceName = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -39,7 +38,8 @@ namespace BuStudentAssistant.Migrations
                         name: "FK_Reviews_Places_PlaceName",
                         column: x => x.PlaceName,
                         principalTable: "Places",
-                        principalColumn: "PlaceName");
+                        principalColumn: "PlaceName",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(

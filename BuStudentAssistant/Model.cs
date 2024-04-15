@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 public class PlacesContext : DbContext
 {
@@ -34,4 +35,9 @@ public class Review
     [Key] public int ReviewId { get; set; }
     public string Title { get; set; }
     public string Content { get; set; }
+
+    [ForeignKey("Place")]
+    public string PlaceName { get; set; }
+    public Place Place {get; set;}
+    
 }
