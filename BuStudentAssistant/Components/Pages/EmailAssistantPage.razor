@@ -2,6 +2,7 @@
 @using Google.Apis.Gmail.v1
 @using Google.Apis.Gmail.v1.Data
 @using Google.Apis.Services
+@using Google.Apis.Util.Store;
 @using Google.Apis.Auth.OAuth2
 @using System.Threading.Tasks
 @using System.Text
@@ -12,11 +13,14 @@
 @using OpenAI.GPT3.ObjectModels;
 @using System.Reflection.Metadata.Ecma335
 @using System.Text.Json
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@rendermode InteractiveServer
 
 <PageTitle>Email Assistant</PageTitle>
 
 <h3>Email Assistant</h3>
-
+<h4>@email</h4>
 
 @if (loading)
 {
@@ -39,7 +43,13 @@ else if (messageSummaries != null)
                         <strong>To:</strong> @message.To <br />
                         <strong>Subject:</strong> @message.Subject <br />
                         <strong>Summary:</strong> @(message.SummarizedBody.ToString()) <br />
+                        <strong>GeneratedReply: </strong> @message.GeneratedReply <br />
+                        <button @onclick="(e) => SendEmail(message.From ,message.To, message.Subject, message.GeneratedReply)">Reply</button> <br />
+                        <input type="text" @bind="userInput" />
+                        <button @onclick="@(e => Submit(message))">GenerateReply</button>
                         <br />
+                        <p> <strong>Error Message: </strong> @errorMessage</p>
+                        <p> <strong>UserInput: </strong>@userInput</p>
                     }
                     else
                     {
@@ -53,7 +63,9 @@ else if (messageSummaries != null)
 else
 {
     <p>No emails found.</p>
+<br />
 }
+
 
 @code {
     private IList<Message> messages;
@@ -62,14 +74,32 @@ else
     private bool loading = true;
     private bool error = false;
     private const int MaxDisplayedMessages = 5;
-    private string api_key = "";
-    string googleClientId = "";
-    string googleClientSecret = "";
+    private string api_key;
+    string googleClientId;
+    string googleClientSecret;
     private string errorMessage= "nothing";
+    private string email;
+    private string userInput;
+
+    private void Submit(EmailMessage email)
+    {
+        GenerateReply(email, userInput);
+    }
+
+    string[] testing = ["songyu@bu.edu", "sycds460@gmail.com", "How are you", "I hope you are getting better."];
+    string[] scopes = new[] 
+    {
+        GmailService.ScopeConstants.GmailReadonly,
+        GmailService.ScopeConstants.GmailCompose,
+        GmailService.ScopeConstants.GmailSend
+    };
 
 
     protected override async Task OnInitializedAsync()
     {
+        api_key = Configuration["ChatGptKey"];
+        googleClientId = Configuration["GmailgoogleClientId"];
+        googleClientSecret = Configuration["GmailgoogleClientSecret"];
         await LoadEmails();
     }
 
@@ -79,27 +109,35 @@ else
         public string To { get; set; }
         public string Subject { get; set; }
         public string SummarizedBody { get; set; }
+        public string GeneratedReply { get; set; }
+    }
+    public static UserCredential Authorize(string clientId, string clientSecret, string[] scopes)
+    {
+        // GoogleWebAuthorizationBroker.RevokeTokenAsync(new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret }, CancellationToken.None).Wait();
+
+        // Initiate authorization flow
+        return GoogleWebAuthorizationBroker.AuthorizeAsync(
+            new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
+            scopes,
+            "user",
+            CancellationToken.None,
+            new FileDataStore("Gmail.API.Auth.Store")).Result;
     }
 
-
+    // displaying emails
     private async Task LoadEmails()
     {
+
         try
         {
-            var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-               new ClientSecrets
-                   {
-                       ClientId = googleClientId,
-                       ClientSecret = googleClientSecret
-                   },
-               new[] { GmailService.ScopeConstants.GmailReadonly },
-               "user",
-               CancellationToken.None);
+            UserCredential credential = Authorize(googleClientId, googleClientSecret, scopes);
 
             var gmailService = new GmailService(new BaseClientService.Initializer
                 {
                     HttpClientInitializer = credential
                 });
+            var profile = gmailService.Users.GetProfile("me").Execute();
+            email = profile.EmailAddress;
 
             EmailGetter emailGetter = new EmailGetter(credential);
             messages = emailGetter.GetMessages("me").Take(MaxDisplayedMessages).ToList();
@@ -166,9 +204,7 @@ else
         return Convert.FromBase64String(base64);
     }
 
-
-
-
+    // summarizing emails for display
     private string GetSenderEmailAddress(Message message)
     {
         var fromHeader = message.Payload.Headers.FirstOrDefault(h => h.Name == "From");
@@ -188,14 +224,26 @@ else
     private async Task<string> GetMessageSummary(Message message)
     {
         var body = GetMessageBody(message);
-        string summed = await Summary(body);
+        string sysMsg = "You are a helpful email reader.";
+        string summed = await Chat(sysMsg, $"Summarize this email in less than 50 words{body}");
         return summed;
     }
+    private async void GenerateReply(EmailMessage email, string response)
+    {
+        string sysMsg = "You are a helpful email writer that focuses on ensuring the main point is told. Only focus on the main body of the email.";
+        string summary = email.SummarizedBody;
+        string generatedEmail = await Chat(sysMsg, $"Write a reply to saying {response} to {summary}");
+        email.GeneratedReply = generatedEmail;
+    }
 
-    private async Task<string> Summary(string messageBody)
+    private async Task<string> Chat(string system, string prompt)
     {
         try
         {
+            if (string.IsNullOrEmpty(prompt) && string.IsNullOrEmpty(system))
+            {
+                return "Failed to read the body of the message.";    
+            }
             var openAIService = new OpenAI.GPT3.Managers.OpenAIService(new OpenAiOptions()
                 {
                     ApiKey = api_key
@@ -204,8 +252,8 @@ else
             {
                 Messages = new List<ChatMessage>
                 {
-                    ChatMessage.FromSystem("You are an email summarization helper"),
-                    ChatMessage.FromUser($"Summarize this {messageBody}")
+                    ChatMessage.FromSystem(system),
+                    ChatMessage.FromUser(prompt)
                 },
                 Model = Models.ChatGpt3_5Turbo,
                 MaxTokens = 100
@@ -217,22 +265,114 @@ else
             }
             else
             {
-                return ("Completion result was not successful");    
+                return ($"Completion result was not successful, the prompt was: {prompt}");    
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred while generating summary: {ex.Message}");
             return "Error occurred while generating summary";
         }
-        
+
     }
 
+    // sending emails
+    private void SendEmail(string from, string to, string subject, string body)
+    {
+        try
+        {
+            // Check if sender and recipient email addresses are empty or null
+            if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
+            {
+                errorMessage = "Sender or recipient email address is empty.";
+                StateHasChanged();
+                return;
+            }
+            if (string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(body)) {
+                errorMessage = "subject or body is empty";
+                StateHasChanged();
+                return;
+            }
 
+            // remove braces
+            
+            (string sender, string senderEmail) = ParseNameAndEmail(from);
+            (string recipient, string recipientEmail) = ParseNameAndEmail(from);
 
+            UserCredential credential = Authorize(googleClientId, googleClientSecret, scopes);
 
+            // Construct MimeMessage
+            var msg = new MimeKit.MimeMessage();
+            msg.From.Add(new MimeKit.MailboxAddress(sender, senderEmail));
+            msg.To.Add(new MimeKit.MailboxAddress(recipient, recipientEmail));
+            msg.Subject = subject;
+            msg.Body = new MimeKit.TextPart("plain")
+                {
+                    Text = body
+                };
 
+            // Convert MimeMessage to RFC822 formatted string
+            string rfc822Message = msg.ToString();
 
+            using (var gmailService = new GmailService(new BaseClientService.Initializer
+                {
+                    HttpClientInitializer = credential
+                }))
+            {
+                var message = new Message
+                    {
+                        Raw = Base64UrlEncode(rfc822Message)
+                    };
+
+                // Send the email
+                gmailService.Users.Messages.Send(message, "me").Execute();
+            }
+            errorMessage = ("Email sent successfully.");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    public static (string name, string email) ParseNameAndEmail(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            throw new ArgumentException("Input string cannot be null or empty.");
+        // Find the position of the opening and closing angle brackets
+        int startIndex = input.IndexOf('<');
+        int endIndex = input.IndexOf('>');
+
+        if (startIndex != -1 && endIndex != -1 && endIndex > startIndex)
+        {
+            // Extract the name substring before the opening angle bracket
+            string name = input.Substring(0, startIndex).Trim();
+
+            // Extract the email substring between the angle brackets
+            string email = input.Substring(startIndex + 1, endIndex - startIndex - 1).Trim();
+
+            return (name, email);
+        }
+        else
+        {
+            // If the input format is incorrect, throw an exception
+            throw new FormatException("Input string does not match the expected format 'Name <email>'.");
+        }
+    }
+
+        static string Base64UrlEncode(string input)
+        {
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            return Convert.ToBase64String(inputBytes)
+                .Replace('+', '-')
+                .Replace('/', '_')
+                .Replace("=", "");
+        }
+
+    // getting emails
     internal class EmailGetter
     {
         private readonly UserCredential _credential;

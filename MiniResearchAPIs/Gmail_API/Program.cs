@@ -2,39 +2,48 @@
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Google.Apis.Services;
+using Google.Apis.Util.Store;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static Google.Apis.Gmail.v1.GmailService;
 
 namespace Gmail_API
 {
     internal class Program
     {
-        private static UserCredential Login(string googleClientId, string googleClientSecret, string[] scopes)
+        private static UserCredential Authorize(string clientId, string clientSecret, string[] scopes)
         {
-            ClientSecrets secrets = new ClientSecrets()
-            {
-                ClientId = googleClientId,
-                ClientSecret = googleClientSecret
-            };
+            // GoogleWebAuthorizationBroker.RevokeTokenAsync(new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret }, CancellationToken.None).Wait();
 
-            return GoogleWebAuthorizationBroker.AuthorizeAsync(secrets, scopes, "user", CancellationToken.None).Result;
+            // Initiate authorization flow
+            return GoogleWebAuthorizationBroker.AuthorizeAsync(
+                new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
+                scopes,
+                "user",
+                CancellationToken.None,
+                new FileDataStore("Gmail.API.Auth.Store")).Result;
         }
-
 
 
         static void Main(string[] args)
 
         {
 
-            string googleClientId = "Enter Client ID";
-            string googleClientSecret = "Enter Client Secret";
-            string[] scopes = new[] { Google.Apis.Gmail.v1.GmailService.Scope.GmailReadonly };
+            string googleClientId = "333907828203-btcnk4m5q6ou2gv7620e4vgaq0i9p3rm.apps.googleusercontent.com";
+            string googleClientSecret = "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";
+            string[] scopes = new[] {
+    GmailService.ScopeConstants.GmailReadonly,
+    GmailService.ScopeConstants.GmailCompose,
+    GmailService.ScopeConstants.GmailSend
+};
 
-            UserCredential credential = Login(googleClientId, googleClientSecret, scopes);
+
+
+            UserCredential credential = Authorize(googleClientId, googleClientSecret, scopes);
 
             using (var gmailService = new GmailService(new BaseClientService.Initializer() { HttpClientInitializer = credential }))
             {
@@ -45,6 +54,41 @@ namespace Gmail_API
             }
             EmailGetter emailGetter = new EmailGetter(credential);
             var messages = emailGetter.GetMessages("me");
+
+            var msg = new MimeKit.MimeMessage();
+            msg.From.Add(new MimeKit.MailboxAddress("Sender Name", "sycds460@gmail.com"));
+            msg.To.Add(new MimeKit.MailboxAddress("Recipient Name", "songyuchen2584@gmail.com"));
+            msg.Subject = "Testing email sending via Gmail API";
+            msg.Body = new MimeKit.TextPart("plain")
+            {
+                Text = "This is a test email sent via the Gmail API."
+            };
+
+            // Convert MimeMessage to RFC822 formatted string
+            string rfc822Message = msg.ToString();
+
+            try
+            {
+
+                using (var gmailService = new GmailService(new BaseClientService.Initializer
+                {
+                    HttpClientInitializer = credential
+                }))
+                {
+
+                    var message = new Message
+                    {
+                        Raw = Base64UrlEncode(rfc822Message)
+                    };
+
+                    gmailService.Users.Messages.Send(message, "me").Execute();
+                    Console.WriteLine("Email sent successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
 
             int i = 0;
             foreach (var message in messages)
@@ -64,8 +108,9 @@ namespace Gmail_API
                     Console.ReadLine();
                 }
             }
+
         }
-        private static string GetMessageBody(Message message)
+            private static string GetMessageBody(Message message)
         {
             string body = "";
 
@@ -100,6 +145,15 @@ namespace Gmail_API
             string paddedBase64 = base64Url.Length % 4 == 0 ? base64Url : base64Url + "====".Substring(base64Url.Length % 4);
             string base64 = paddedBase64.Replace("_", "/").Replace("-", "+");
             return Convert.FromBase64String(base64);
+        }
+
+        private static string Base64UrlEncode(string input)
+        {
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            return Convert.ToBase64String(inputBytes)
+                .Replace('+', '-')
+                .Replace('/', '_')
+                .Replace("=", "");
         }
     }
 }
