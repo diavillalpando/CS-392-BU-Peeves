@@ -13,6 +13,8 @@
 @using OpenAI.GPT3.ObjectModels;
 @using System.Reflection.Metadata.Ecma335
 @using System.Text.Json
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
 @rendermode InteractiveServer
 
 <PageTitle>Email Assistant</PageTitle>
@@ -72,9 +74,9 @@ else
     private bool loading = true;
     private bool error = false;
     private const int MaxDisplayedMessages = 5;
-    private string api_key = "";
-    string googleClientId = "";
-    string googleClientSecret = "";
+    private string api_key;
+    string googleClientId;
+    string googleClientSecret;
     private string errorMessage= "nothing";
     private string email;
     private string userInput;
@@ -95,6 +97,9 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        api_key = Configuration["ChatGptKey"];
+        googleClientId = Configuration["GmailgoogleClientId"];
+        googleClientSecret = Configuration["GmailgoogleClientSecret"];
         await LoadEmails();
     }
 
