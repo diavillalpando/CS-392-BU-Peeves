@@ -11,14 +11,41 @@
 
 <PageTitle>Study Spot Yelp</PageTitle>
 
-<h1>Study Spot Yelp</h1>
+@* -----------------------THIS WAS FOR DEVELOPMENT----------------------- *@
+@* <h1>Study Spot Yelp</h1>
 <p>Key: @Configuration["GMapsApiKey"]</p>
 <div>@placeDetails</div>
 
 <h3>Stream Image</h3>
 <p>
     <img id="image" />
-</p>
+</p> *@
+@* -----------------------END OF DEVELOPMENT----------------------- *@
+
+
+@if (study_spots == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <ul class="study_spot_list">
+        @foreach (var spot in study_spots)
+            {
+                <li><a>
+                    <div>(@spot.Id) @spot.Name </div>
+                    <div>Stars: @spot.Score/5.0</div>
+                    <div>Address: @spot.Address</div>
+                </a></li>
+            }
+
+    </ul>
+}
+
+<div class = "big_map_box">
+    <img id="big_map" />
+</div>
+
 
 
 <script> //Script that updates an image 
@@ -36,9 +63,12 @@
 
 
 @code {
-    string placeDetails;
-    bool map_loaded;
-
+    @* ---- DEV ----  *@
+    @* string placeDetails;
+    bool map_loaded; *@
+    @* -------------  *@
+    
+    StudySpot[] study_spots;
 
     private string my_place_id = "ChIJFzjlY_B544kRyL6j4ABuNCs";
 
@@ -120,18 +150,45 @@
 
     protected override async Task OnInitializedAsync() // Runs when the page loads
     {
-        map_loaded = false;
-        placeDetails = Place_Details(my_place_id);
+        @* ---- DEV ----  *@
+        @* map_loaded = false;
+        placeDetails = Place_Details(my_place_id); *@
+        @* -------------  *@
+
+        string[] places = {"Mugar Memorial Library","Educational Resource Center","Pickering Educational Resources Library","Science & Engineering Library","HoJo","Center for Computing & Data Sciences","College of Arts & Sciences Think Tank","Stone Science Library"};
+        string[] addresses = {"771 Commonwealth Ave","100 Bay State Road, fifth floor","Wheelock College of Education & Human Development 2 Silber Way","38 Cummington Mall","575 Commonwealth Ave., eighth floor","665 Commonwealth Ave.","725 Commonwealth Ave., Room 105","725 Commonwealth Ave., Room 440"};
+        study_spots = places.Select((place,index) => new StudySpot
+        {
+            Id = index,
+            Name = place,
+            Score = Random.Shared.Next(0,5),
+            Address = addresses[index],
+            Map_Marker = index + 1
+        }).ToArray();
+
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) // Runs after the first time the page loads
     {
+        @* ---- DEV ----  *@
         if (firstRender)
         {
-            await Maps_Photo("Boston University, Boston, ma", "image");
+            await Maps_Photo("Boston University, Boston, ma", "big_map");
         }
+        @* -------------  *@
     }
 
+    @* ----- Class for Study Spots ------ *@
+    private class StudySpot
+    {
+        public int Id { get; set; }
+        public float Score { get; set; }
+        public string? Name { get; set; }
+        public string? Address { get; set; }
+
+        public int Map_Marker { get; set; }
+        
+    }
 
 
 }
