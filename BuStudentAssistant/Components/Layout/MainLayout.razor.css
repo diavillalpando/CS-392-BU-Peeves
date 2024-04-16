@@ -1,3 +1,11 @@
+.header {
+    background-color: rgba(231, 122, 122, 0.71);
+    height: 50px;
+    padding: 0px;
+    text-align: center;
+    position: relative;
+  }
+  
 .page {
     position: relative;
     display: flex;
@@ -6,6 +14,16 @@
 
 main {
     flex: 1;
+    min-height: 150vh; /* Adjust this value as needed to make the page taller */
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(180deg, white 50%, #E77A7A 100%);
+    background-attachment: fixed; /* This will fix the background in place, covering the entire page */
+    display: flex;
+    flex-direction: column;
+
+    font-family: 'Marvel', sans-serif;
+    font-weight: 2000; 
 }
 
 .sidebar {
@@ -13,12 +31,12 @@ main {
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
     justify-content: flex-end;
-    height: 3.5rem;
     display: flex;
     align-items: center;
+    background-color: rgba(231, 122, 122, 0.71);
+    height: 50px;
+    padding: 0px;
 }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
@@ -94,3 +112,6 @@ main {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+/* ---------- */
+

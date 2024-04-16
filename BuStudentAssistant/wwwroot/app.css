@@ -3,17 +3,24 @@ html, body {
 }
 
 a, .btn-link {
-    color: #006bb7;
+    color: #b70000;
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: #c21b1b;
+    border-color: #c94f4f;
+}
+
+.btn-primary:hover {
+
+    color: #fff;
+    background-color: #e96464;
+    border-color: #e79191;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #c21b1b;
 }
 
 .content {
