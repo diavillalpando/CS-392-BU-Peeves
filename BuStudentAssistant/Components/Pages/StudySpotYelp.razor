@@ -29,20 +29,31 @@
 }
 else
 {
-    <ul class="study_spot_list">
+    <ul id="study_spot_list">
+        <h1 class = "title">
+            Study Spot Yelp
+        </h1>
+        
         @foreach (var spot in study_spots)
             {
-                <li><a>
-                    <div>(@spot.Id) @spot.Name </div>
-                    <div>Stars: @spot.Score/5.0</div>
-                    <div>Address: @spot.Address</div>
+                <li><a href = "/">
+                    <img src = "https://www.bu.edu/files/2018/12/educational-resource-center-StudySpots-6.jpg">
+                    <div>
+                        
+                        <div>(@spot.Id) @spot.Name </div>
+                        <div>Stars: @spot.Score/5.0</div>
+                        <div>Address: @spot.Address</div>
+                    </div>
+                    
+
                 </a></li>
+                
             }
 
     </ul>
 }
 
-<div class = "big_map_box">
+<div id = "big_map_box">
     <img id="big_map" />
 </div>
 
@@ -132,12 +143,12 @@ else
         
     }
 
-    private async Task Maps_Photo(string center, string photo_id ,int width = 500, int height = 400, int zoom = 20)
+    private async Task Maps_Photo(string center, string photo_id ,int width = 1000, int height = 1000, int zoom = 20)
     {
         Console.WriteLine($"Calling Google Maps API for static image of '{center}' to update '{photo_id}' ");
         try{
             var api_key = Configuration["GMapsApiKey"];
-            Stream imageStream = Task.Run(() => getUrl($"https://maps.googleapis.com/maps/api/staticmap?key={api_key}&size={500}x{500}&Zoom={20}&center=\"{center}\"")).Result; // makes url call
+            Stream imageStream = Task.Run(() => getUrl($"https://maps.googleapis.com/maps/api/staticmap?key={api_key}&size={width}x{height}&Zoom={zoom}&center=\"{center}\"")).Result; // makes url call
             await setImage(imageStream,photo_id);
             StateHasChanged();
         }catch (Exception ex){
@@ -155,8 +166,8 @@ else
         placeDetails = Place_Details(my_place_id); *@
         @* -------------  *@
 
-        string[] places = {"Mugar Memorial Library","Educational Resource Center","Pickering Educational Resources Library","Science & Engineering Library","HoJo","Center for Computing & Data Sciences","College of Arts & Sciences Think Tank","Stone Science Library"};
-        string[] addresses = {"771 Commonwealth Ave","100 Bay State Road, fifth floor","Wheelock College of Education & Human Development 2 Silber Way","38 Cummington Mall","575 Commonwealth Ave., eighth floor","665 Commonwealth Ave.","725 Commonwealth Ave., Room 105","725 Commonwealth Ave., Room 440"};
+        string[] places = {"Mugar Memorial Library","Educational Resource Center","Pickering Educational Resources Library","Science & Engineering Library","HoJo","Center for Computing & Data Sciences","College of Arts & Sciences Think Tank","Stone Science Library","School of Theology Library","Ziskind Lounge","Dean’s Study Lounge","College of General Studies Lounges"};
+        string[] addresses = {"771 Commonwealth Ave","100 Bay State Road, fifth floor","Wheelock College of Education & Human Development 2 Silber Way","38 Cummington Mall","575 Commonwealth Ave., eighth floor","665 Commonwealth Ave.","725 Commonwealth Ave., Room 105","725 Commonwealth Ave., Room 440","745 Commonwealth Ave., second floor","George Sherman Union 775 Commonwealth Ave., second floor", "George Sherman Union 775 Commonwealth Ave., third floor", "871 Commonwealth Ave."};
         study_spots = places.Select((place,index) => new StudySpot
         {
             Id = index,
