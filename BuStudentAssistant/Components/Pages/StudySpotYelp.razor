@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using System.Text.Json
 @using System.Text.Json.Serialization
+@using Majorsoft.Blazor.Components.Maps
 @using Microsoft.Extensions.Configuration
 @using System.Drawing.Imaging
 @inject IConfiguration Configuration
@@ -9,7 +10,11 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
+
 <PageTitle>Study Spot Yelp</PageTitle>
+
+
+
 
 @* -----------------------THIS WAS FOR DEVELOPMENT----------------------- *@
 @* <h1>Study Spot Yelp</h1>
@@ -54,10 +59,17 @@ else
 }
 
 <div id = "big_map_box">
-    <img id="big_map" />
+    @* <img id="big_map" /> *@
+    @if (@post_first_render && (@_mapHeight != 0 && @_mapWidth != 0)){
+        <GoogleMap 
+        @bind-Center="_jsMapCenter" @bind-Center:event="OnMapCenterChanged"
+        @bind-Zoom="_jsMapZoomLevel" @bind-Zoom:event="OnMapZoomLevelChanged"
+        OnMapInitialized="@(() => {})" 
+        Width="@_mapWidth"
+	    Height="@_mapHeight"
+        ApiKey="@_googleMapsApiKey" />
+    }
 </div>
-
-
 
 <script> //Script that updates an image 
   window.setImage = async (imageElementId, imageStream) => {
@@ -72,6 +84,15 @@ else
   }
 </script>
 
+<script>
+    window.GetElementHeight = async (name) => {
+        return document.getElementById(name).offsetHeight;
+    }
+    window.GetElementWidth = async (name) => {
+        return document.getElementById(name).offsetWidth;
+    }
+</script>
+
 
 @code {
     @* ---- DEV ----  *@
@@ -80,6 +101,16 @@ else
     @* -------------  *@
     
     StudySpot[] study_spots;
+
+    bool post_first_render = false;
+
+    @* Configuration for the maap *@
+    private string _googleMapsApiKey = "";
+	private GeolocationData _jsMapCenter = new GeolocationData("Boston University");
+	private byte _jsMapZoomLevel = 16;
+
+    private int _mapHeight;
+    private int _mapWidth;
 
     private string my_place_id = "ChIJFzjlY_B544kRyL6j4ABuNCs";
 
@@ -157,6 +188,10 @@ else
         
     }
 
+    //------ NEW STUFF
+
+    
+
 //------------------End of GMAPS Methods-----------------------------//
 
     protected override async Task OnInitializedAsync() // Runs when the page loads
@@ -166,6 +201,7 @@ else
         placeDetails = Place_Details(my_place_id); *@
         @* -------------  *@
 
+        _googleMapsApiKey = Configuration["GMapsApiKey"];
         string[] places = {"Mugar Memorial Library","Educational Resource Center","Pickering Educational Resources Library","Science & Engineering Library","HoJo","Center for Computing & Data Sciences","College of Arts & Sciences Think Tank","Stone Science Library","School of Theology Library","Ziskind Lounge","Dean’s Study Lounge","College of General Studies Lounges"};
         string[] addresses = {"771 Commonwealth Ave","100 Bay State Road, fifth floor","Wheelock College of Education & Human Development 2 Silber Way","38 Cummington Mall","575 Commonwealth Ave., eighth floor","665 Commonwealth Ave.","725 Commonwealth Ave., Room 105","725 Commonwealth Ave., Room 440","745 Commonwealth Ave., second floor","George Sherman Union 775 Commonwealth Ave., second floor", "George Sherman Union 775 Commonwealth Ave., third floor", "871 Commonwealth Ave."};
         study_spots = places.Select((place,index) => new StudySpot
@@ -184,7 +220,11 @@ else
         @* ---- DEV ----  *@
         if (firstRender)
         {
-            await Maps_Photo("Boston University, Boston, ma", "big_map");
+            @* await Maps_Photo("Boston University, Boston, ma", "big_map"); *@
+            _mapHeight = await JS.InvokeAsync<int>("GetElementHeight","big_map_box");
+            _mapWidth = await JS.InvokeAsync<int>("GetElementWidth","big_map_box");
+            post_first_render = true;
+            StateHasChanged();
         }
         @* -------------  *@
     }

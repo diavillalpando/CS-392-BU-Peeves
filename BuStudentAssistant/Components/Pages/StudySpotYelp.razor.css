@@ -71,7 +71,9 @@ body {
     float: right;
     overflow: scroll;
     width: 50%;
+    height: calc(100% - 50px);
 }
-#big_map_box img{
+.interactive_map{
     width: 100%;
+    height: 100%;
 }
