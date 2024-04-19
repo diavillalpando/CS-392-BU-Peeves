@@ -2,6 +2,9 @@
 @rendermode InteractiveServer
 @using Sy = StudySpotYelpNameSpace
 @inject IConfiguration Configuration
+@inject IHttpClientFactory ClientFactory
+@inject HttpClient Http
+@inject IJSRuntime JS
 
 @if( post_first_render ){
     <PageTitle>@spot.Name</PageTitle>
@@ -14,23 +17,38 @@
     <div>Stars: @spot.Score/5.0</div>
     <div>Address: @spot.Address</div>
     <p>@spot.Description</p>
-
+    <img id = "map">
     
 }else{
     <div>loading...</div>
 }
 
+<script> //Script that updates an image 
+window.setImage = async (imageElementId, imageStream) => {
+    const arrayBuffer = await imageStream.arrayBuffer();
+    const blob = new Blob([arrayBuffer]);
+    const url = URL.createObjectURL(blob);
+    const image = document.getElementById(imageElementId);
+    image.onload = () => {
+    URL.revokeObjectURL(url);
+    }
+    image.src = url;
+}
+</script>
 
 @code {
     [Parameter]
     public string? studySpot_id { get; set; }
     Sy.StudySpot spot;
+    Sy.GoogleMaps gmaps;
     string _googleMapsApiKey;
     bool post_first_render = false;
 
     protected override async Task OnInitializedAsync() // Runs when the page loads
     {
         _googleMapsApiKey = Configuration["GMapsApiKey"];
+
+        gmaps = new Sy.GoogleMaps(Configuration, JS, Http, ClientFactory);
 
         string n = "Mugar Memorial Library";
         string a = "771 Commonwealth Ave";
@@ -51,6 +69,7 @@
         {
             @* _mapHeight = await JS.InvokeAsync<int>("GetElementHeight","big_map_box");
             _mapWidth = await JS.InvokeAsync<int>("GetElementWidth","big_map_box"); *@
+            gmaps.Maps_Photo_Marker(spot.Address,"map");
             post_first_render = true;
             StateHasChanged();
         }

@@ -9,14 +9,18 @@ using Microsoft.JSInterop;
 
 public class GoogleMaps
 {
-    [Inject] 
-    IHttpClientFactory ClientFactory { get; set; }
-    [Inject] 
-    HttpClient Http { get; set; }
-    [Inject] 
-    IJSRuntime JS { get; set; }
-    [Inject]
-    IConfiguration Configuration { get; set; }
+    private IHttpClientFactory ClientFactory;
+    private HttpClient Http;
+    private IJSRuntime JS;
+
+    private IConfiguration Configuration;
+
+    public GoogleMaps(IConfiguration Configuration, IJSRuntime JS, HttpClient Http, IHttpClientFactory ClientFactory){
+        this.Configuration = Configuration;
+        this.JS = JS;
+        this.Http = Http;
+        this.ClientFactory = ClientFactory;
+    }
     public async Task<Stream> getUrl(string sURL) // makes a get call from the parameter 'sURL' and returns a Stream object
     {
         var client = ClientFactory.CreateClient();
@@ -95,6 +99,20 @@ public class GoogleMaps
         try{
             var api_key = Configuration["GMapsApiKey"];
             Stream imageStream = Task.Run(() => getUrl($"https://maps.googleapis.com/maps/api/staticmap?key={api_key}&size={width}x{height}&Zoom={zoom}&center=\"{center}\"")).Result; // makes url call
+            await setImage(imageStream,photo_id);
+            // StateHasChanged();
+        }catch (Exception ex){
+            Console.WriteLine($"Couldn't load map photo: {ex.Message}");
+        }
+        
+    }
+
+    public async Task Maps_Photo_Marker(string center, string photo_id ,int width = 1000, int height = 1000, int zoom = 25)
+    {
+        Console.WriteLine($"Calling Google Maps API for static image of '{center}' to update '{photo_id}' ");
+        try{
+            var api_key = Configuration["GMapsApiKey"];
+            Stream imageStream = Task.Run(() => getUrl($"https://maps.googleapis.com/maps/api/staticmap?key={api_key}&markers=\"{center}\"&size={width}x{height}&Zoom={zoom}&center=\"{center}\"")).Result; // makes url call
             await setImage(imageStream,photo_id);
             // StateHasChanged();
         }catch (Exception ex){
