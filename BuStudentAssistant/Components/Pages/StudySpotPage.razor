@@ -1,13 +1,58 @@
 ﻿@page "/studySpotYelp/{studySpot_id}"
+@rendermode InteractiveServer
 @using Sy = StudySpotYelpNameSpace
+@inject IConfiguration Configuration
 
-<PageTitle>Study Spot Yelp</PageTitle>
+@if( post_first_render ){
+    <PageTitle>@spot.Name</PageTitle>
 
-<h1>Route Parameter Example 1</h1>
+    <a href = "studySpotYelp"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+    <img src = "https://www.bu.edu/files/2018/12/educational-resource-center-StudySpots-6.jpg">
+    <h1 class = "title">
+        @spot.Name (@spot.Id)
+    </h1>
+    <div>Stars: @spot.Score/5.0</div>
+    <div>Address: @spot.Address</div>
+    <p>@spot.Description</p>
 
-<p>Blazor is @studySpot_id!</p>
+    
+}else{
+    <div>loading...</div>
+}
+
 
 @code {
     [Parameter]
     public string? studySpot_id { get; set; }
+    Sy.StudySpot spot;
+    string _googleMapsApiKey;
+    bool post_first_render = false;
+
+    protected override async Task OnInitializedAsync() // Runs when the page loads
+    {
+        _googleMapsApiKey = Configuration["GMapsApiKey"];
+
+        string n = "Mugar Memorial Library";
+        string a = "771 Commonwealth Ave";
+        string d = "Mugar is a second home for many BU students during finals. It will stay open 24 hours from Wednesday, December 13, through Friday, December 22, at 11 pm. The library has seven floors and the largest computer lounge on campus—and the floors get quieter the higher you go. The ground floor makes for an ideal group study environment.";
+
+        spot = new Sy.StudySpot{
+            Id = int.Parse(studySpot_id),
+            Name = n,
+            Address = a,
+            Map_Marker = 0,
+            Description = d
+        };
+
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender) // Runs after the first time the page loads
+    {
+        if (firstRender)
+        {
+            @* _mapHeight = await JS.InvokeAsync<int>("GetElementHeight","big_map_box");
+            _mapWidth = await JS.InvokeAsync<int>("GetElementWidth","big_map_box"); *@
+            post_first_render = true;
+            StateHasChanged();
+        }
+    }
 }
