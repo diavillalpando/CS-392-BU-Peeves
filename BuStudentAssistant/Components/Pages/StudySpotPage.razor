@@ -1,0 +1,13 @@
+﻿@page "/studySpotYelp/{studySpot_id}"
+@using Sy = StudySpotYelpNameSpace
+
+<PageTitle>Study Spot Yelp</PageTitle>
+
+<h1>Route Parameter Example 1</h1>
+
+<p>Blazor is @studySpot_id!</p>
+
+@code {
+    [Parameter]
+    public string? studySpot_id { get; set; }
+}
