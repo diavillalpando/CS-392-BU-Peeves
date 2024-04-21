@@ -19,6 +19,7 @@ body {
     background-attachment: fixed; /* This will fix the background in place, covering the entire page */
     display: flex;
     flex-direction: column;
+    z-index: 99;
   }
 
 .marvel-bold {
