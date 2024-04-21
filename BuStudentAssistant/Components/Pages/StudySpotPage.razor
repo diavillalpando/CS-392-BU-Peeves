@@ -24,11 +24,24 @@
 
     <div id = "information">
         <p>@spot.Description</p>
+        <hr>
+        <h3>Comments:</h3>
+        @if (@spot.Comments == null){
+            <div>loading comments...</div>
+        }else{
+            <ul id = "comment_box">
+                @foreach (var comment in @spot.Comments){
+                    <li>
+                        <div><b>@comment.User_Name</b> @comment.Date</div>
+                        @comment.Text
+                    </li>
+                }
+            </ul>
+        }
+        
         
     </div>
     <div id = "map_box">
-        @* <a href = "https://www.google.com/maps/place/@spot.Address"><img id = "map"></a> *@
-        @* <div> a</div> *@
         <a href = "https://www.google.com/maps/place/@spot.Address"><img id = "map"></a>
     </div>
     
@@ -57,34 +70,46 @@ window.setImage = async (imageElementId, imageStream) => {
     public string? studySpot_id { get; set; }
     Sy.StudySpot spot;
     Sy.GoogleMaps gmaps;
-    string _googleMapsApiKey;
     bool post_first_render = false;
 
     protected override async Task OnInitializedAsync() // Runs when the page loads
     {
-        _googleMapsApiKey = Configuration["GMapsApiKey"];
 
         gmaps = new Sy.GoogleMaps(Configuration, JS, Http, ClientFactory);
 
+        @* ----------- THIS IS FOR TESTING ----------- *@
         string n = "Mugar Memorial Library";
         string a = "771 Commonwealth Ave";
         string d = "Mugar is a second home for many BU students during finals. It will stay open 24 hours from Wednesday, December 13, through Friday, December 22, at 11 pm. The library has seven floors and the largest computer lounge on campus—and the floors get quieter the higher you go. The ground floor makes for an ideal group study environment.";
+        string[] c = {"This is my favorite study spot ever!", "I really don't like the way it smells", "AVOID AT ALL COSTS"};
+        string[] c_n = {"Bob", "Sue", "Jane"};
+        var startDate = DateOnly.FromDateTime(DateTime.Now);
+        @* -------------- END OF TESTING -------------- *@
 
         spot = new Sy.StudySpot{
             Id = int.Parse(studySpot_id),
             Name = n,
             Address = a,
             Map_Marker = 0,
-            Description = d
+            Description = d,
         };
+
+
+        spot.Comments = c.Select((comment,index) => new Sy.Comment
+        {
+            Id = index,
+            Date = startDate.AddDays(index),
+            Text = comment,
+            User_Id = index,
+            User_Name = c_n[index]
+            
+        }).ToList();
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender) // Runs after the first time the page loads
     {
         if (firstRender)
         {
-            @* _mapHeight = await JS.InvokeAsync<int>("GetElementHeight","big_map_box");
-            _mapWidth = await JS.InvokeAsync<int>("GetElementWidth","big_map_box"); *@
             gmaps.Maps_Photo_Marker(spot.Address,"map");
             post_first_render = true;
             StateHasChanged();
