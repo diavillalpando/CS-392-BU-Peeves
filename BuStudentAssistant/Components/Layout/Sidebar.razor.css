@@ -1,0 +1,131 @@
+.header {
+    background-color: rgba(231, 122, 122, 0.71);
+    height: 50px;
+    padding: 0px;
+    text-align: center;
+    position: relative;
+  }
+
+html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+body {
+    min-height: 150vh; /* Adjust this value as needed to make the page taller */
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(180deg, white 50%, #E77A7A 100%);
+    background-attachment: fixed; /* This will fix the background in place, covering the entire page */
+    display: flex;
+    flex-direction: column;
+  }
+
+.marvel-bold {
+    font-family: 'Marvel', sans-serif;
+    font-weight: 2000; 
+  }
+
+*{
+      list-style: none;
+      text-decoration: none;
+      margin: 0px;
+      padding: 2px;
+      box-sizing: border-box;
+}
+
+.wrapper .sidebar ul li a{
+  display: block;
+  padding: 10px 20px;
+  border-bottom: 1px solid #E77A7A;
+  color: rgb(241, 237, 237);
+  font-size: 16px;
+  position: relative;
+  border-radius: 10px;
+  transition: padding 500ms;
+}
+
+.wrapper .sidebar ul li a .icon{
+  color: #dee4ec;
+  width: 30px;
+  display: inline-block;
+}
+
+.wrapper .sidebar ul li a:hover,
+.wrapper .sidebar ul li a.active{
+    color: #E77A7A;
+    background:white;
+    padding: 10px 10px;
+    border-right: 2px solid #E77A7A;
+}
+
+.wrapper .sidebar ul li a:hover .icon,
+.wrapper .sidebar ul li a.active .icon{
+    color: #E77A7A;
+}
+
+.wrapper .sidebar ul li a:hover:before,
+.wrapper .sidebar ul li a.active:before{
+    display: block;
+}
+  
+.wrapper .sidebar{
+  background: #E77A7A;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 225px;
+  height: 100%;
+  /* padding: 20px 0; */
+  padding-top: 50px;
+  transition: all 0.5s ease;
+}
+
+body.active .wrapper .sidebar{
+    right: -225px;
+}
+
+body.active .wrapper .section{
+    margin-left: 0;
+    width: 100%;
+}
+
+.wrapper .section{
+  width: calc(100% - 225px);
+  margin-right: 225px;
+  transition: all 0.5s ease;
+}
+
+.wrapper .section .top_navbar{
+  background: #E77A7A;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  padding: 0 20px;
+  top: 0;
+  right: 0;
+  left: auto;
+  width: 100%;
+  z-index: 999;
+
+}
+
+.wrapper .section .top_navbar .hamburger a{
+  font-size: 28px;
+  color: #f4fbff;
+}
+
+.wrapper .section .top_navbar .hamburger a:hover{
+  color: #a94343;
+}
+
+.title_button {
+  color: rgb(255, 255, 255);
+}
+
+.title_button:hover {
+  color: rgb(222, 206, 206);
+}

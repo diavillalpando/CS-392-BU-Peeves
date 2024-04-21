@@ -1,0 +1,71 @@
+﻿
+<html>
+    <body class="active">
+        <div class="wrapper">
+            <!--Top menu -->
+            <div class="section">
+            <div class="top_navbar">
+                <a class = "title_button" href="">
+                    BU Student Assistant
+                </a>
+                
+                <div class="hamburger">
+                    <a>
+                        <i class="fas fa-bars"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+            <div class="sidebar">
+            <!--profile image & text-->
+                <!--menu item-->
+                <ul>
+            <li>
+                <a href="">
+                    <span class="icon"><i class="fas fa-home"></i></span>
+                    <span class="item">Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="counter">
+                    <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    <span class="item">Counter [DEV]</span>
+                </a>
+            </li>
+            <li>
+                <a href="weather">
+                    <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    <span class="item">Weather [DEV]</span>
+                </a>
+            </li>
+            <li>
+                <a href="studySpotYelp">
+                    <span class="icon"><i class="fas fa-map-marker"></i></span>
+                    <span class="item">Study Spot Yelp</span>
+                </a>
+            </li>
+            <li>
+                <a href="emailAssistant">
+                    <span class="icon"><i class="far fa-envelope"></i></span>
+                    <span class="item">Email Assistant</span>
+                </a>
+            </li>
+            <li>
+                <a href="mbta">
+                    <span class="icon"><i class="fas fa-subway"></i></span>
+                    <span class="item">MBTA Tool</span>
+                </a>
+            </li>
+        </ul>
+            </div>
+    </div>
+    <script>
+        var hamburger = document.querySelector(".hamburger");
+        hamburger.addEventListener("click", function(){
+            document.querySelector("body").classList.toggle("active");
+        })
+    </script>
+    </body>
+</html>
+

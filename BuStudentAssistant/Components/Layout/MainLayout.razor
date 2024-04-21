@@ -1,0 +1,34 @@
+﻿@inherits LayoutComponentBase
+
+@* Imports Font Awesome *@
+<head>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+
+    </style>
+</head>
+
+<html>
+    <div class="page">
+        <main>
+            @* Invisible header to make the spacing right  *@
+            <div class="header"></div> 
+            
+            @* Contents of the Page *@
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+</html>
+
+<Sidebar />
