@@ -9,15 +9,31 @@
 @if( post_first_render ){
     <PageTitle>@spot.Name</PageTitle>
 
-    <a href = "studySpotYelp"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-    <img src = "https://www.bu.edu/files/2018/12/educational-resource-center-StudySpots-6.jpg">
-    <h1 class = "title">
-        @spot.Name (@spot.Id)
-    </h1>
-    <div>Stars: @spot.Score/5.0</div>
-    <div>Address: @spot.Address</div>
-    <p>@spot.Description</p>
-    <img id = "map">
+    
+    <img id = "banner" src = "https://www.bu.edu/files/2018/12/educational-resource-center-StudySpots-6.jpg">
+    <div id = "banner_text">
+        <a href = "studySpotYelp"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+        <div>
+            <h1 class = "title">
+            @spot.Name (@spot.Id)
+            </h1>
+            <div>Stars: @spot.Score/5.0</div>
+            <div>Address: @spot.Address</div>
+        </div>
+    </div>
+
+    <div id = "information">
+        <p>@spot.Description</p>
+        
+    </div>
+    <div id = "map_box">
+        @* <a href = "https://www.google.com/maps/place/@spot.Address"><img id = "map"></a> *@
+        @* <div> a</div> *@
+        <a href = "https://www.google.com/maps/place/@spot.Address"><img id = "map"></a>
+    </div>
+    
+    
+    
     
 }else{
     <div>loading...</div>
