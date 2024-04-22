@@ -3,6 +3,7 @@ using BuStudentAssistant.Data;
 using BuStudentAssistant.Services;
 using Majorsoft.Blazor.Components.Maps;
 using Majorsoft.Blazor.Components.Common.JsInterop;
+using BuStudentAssistant.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddScoped<UserService>();
 
 builder.Services.AddMapExtensions();
 builder.Services.AddJsInteropExtensions();
+builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 
 var app = builder.Build();
 
