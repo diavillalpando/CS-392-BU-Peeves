@@ -68,8 +68,9 @@ else
     <br />
 }
     <button @onclick="PreviousPage">Previous</button>
+    <span> <strong>Page: </strong> @(pageIndex.ToString())</span>
     <button @onclick="NextPage">Next</button>
-    <p> <strong>Page: </strong> @(pageIndex.ToString())</p>
+
 
 
 @code {
