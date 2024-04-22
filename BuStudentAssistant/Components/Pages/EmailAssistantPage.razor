@@ -108,7 +108,7 @@ else
         api_key = Configuration["ChatGptKey"];
         googleClientId = Configuration["GmailgoogleClientId"];
         googleClientSecret = Configuration["GmailgoogleClientSecret"];
-        await LoadEmails(pageIndex);
+        await LoadEmails();
     }
 
     public class EmailMessage
@@ -133,7 +133,7 @@ else
     }
 
     // displaying emails
-    private async Task LoadEmails(int page)
+    private async Task LoadEmails()
     {
         loading = true;
         try
@@ -183,14 +183,14 @@ else
     {
         pageIndex++;
         messageOnPage.Clear(); // Clear previous messages
-        LoadEmails(pageIndex);
+        LoadEmails();
     }
 
     private void PreviousPage()
     {
         pageIndex--;
         messageOnPage.Clear(); // Clear previous messages
-        LoadEmails(pageIndex);
+        LoadEmails();
     }
 
 
