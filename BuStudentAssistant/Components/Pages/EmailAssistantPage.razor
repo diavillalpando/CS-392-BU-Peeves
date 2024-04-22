@@ -109,7 +109,7 @@ else
         api_key = Configuration["ChatGptKey"];
         googleClientId = Configuration["GmailgoogleClientId"];
         googleClientSecret = Configuration["GmailgoogleClientSecret"];
-        await LoadEmails();
+        await LoadEmails(page);
     }
 
     public class EmailMessage
@@ -133,7 +133,7 @@ else
     }
 
     // displaying emails
-    private async Task LoadEmails()
+    private async Task LoadEmails(int page)
     {
         loading = true;
         try
