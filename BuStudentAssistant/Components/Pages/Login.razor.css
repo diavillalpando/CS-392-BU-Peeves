@@ -1,0 +1,44 @@
+﻿/* Base styles for the login form, similar to the registration form */
+.form-container {
+    width: 300px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Marvel', sans-serif;
+}
+
+    .form-container label {
+        color: #333;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .form-container .form-control {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 20px; 
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .form-container .submit-button {
+        width: 100%;
+        padding: 10px;
+        background-color: #D31E31;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+    }
+        .form-container .submit-button:hover {
+            background-color: #C41E30;
+        }
+
+.error {
+    color: #D31E31;
+    font-size: 14px;
+    margin-bottom: 10px;
+}

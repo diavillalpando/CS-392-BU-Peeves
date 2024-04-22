@@ -11,6 +11,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 builder.Services.AddScoped<UserService>();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,105 +1,172 @@
 ﻿@page "/register"
+@rendermode InteractiveServer
+
 @using BuStudentAssistant.Data
 @using BuStudentAssistant.Models
 @using MongoDB.Driver
 @using BCrypt.Net
 @using Microsoft.AspNetCore.Components.Forms
+@inject IConfiguration Configuration
 @inject IMongoDbContext dbContext
+@inject IHttpClientFactory ClientFactory
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
-<EditForm Model="@newUser" OnValidSubmit="HandleRegistration" FormName="UserRegistrationForm">
-    <DataAnnotationsValidator />
-    <ValidationSummary />   
-    <div class="form-group">
-        <label for="username">Username:</label>
-        <InputText id="username" class="form-control" @bind-Value="newUser.Username" />
-    </div>
-    <div class="form-group">
-        <label for="password">Password:</label>
-        <InputText id="password" type="password" class="form-control" @bind-Value="newUser.Password" />
 
-    </div>
-    <button type="submit" class="btn btn-primary">Register</button>
-</EditForm>
+<div class="form-container">
+    @if (post_first_render)
+    {
+        <form model="post" @onsubmit="HandleRegisterUser" @formname="UserForm">
+            <label for="firstName">First Name:</label>
+            <input id="firstName" type="text" @bind-value="firstName" required>
 
+            <label for="lastName">Last Name:</label>
+            <input id="lastName" type="text" @bind-value="lastName" required>
+
+            <label for="email">Email:</label>
+            <input id="email" type="email" @bind-value="email" required>
+
+            <label for="username">Username:</label>
+            <input id="username" type="text" @bind-value="username_input" required>
+
+            <label for="password">Password:</label>
+            <input id="password" type="password" @bind-value="password_input" required>
+
+            <label for="confirmPassword">Confirm Password:</label>
+            <input id="confirmPassword" type="password" @bind-value="confirmPassword" required>
+
+            <input type="submit" value="Register">
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="error">@ErrorMessage</div>
+            }
+        </form>
+    }
+</div>
 @code {
-    private User newUser = new User();
+    string firstName;
+    string lastName;
+    string email;
+    string username_input;
+    string password_input;
+    string confirmPassword;
     public string ErrorMessage { get; set; }
-    private EditContext editContext;
+    bool post_first_render = false;
+    bool isPasswordVisible = false;
+    ElementReference passwordElement;
 
     protected override void OnInitialized()
     {
-        base.OnInitialized();
-        newUser = new User();
-        editContext = new EditContext(newUser);
-
-        if (dbContext == null)
-        {
-            throw new InvalidOperationException("Database context is not injected properly.");
-        }
+    }
+    private async Task<bool> IsUsernameUnique(string username)
+    {
+        var existingUser = await dbContext.Users.Find(u => u.Username == username).FirstOrDefaultAsync();
+        return existingUser == null;
     }
 
-    public async Task TestDatabaseConnection()
+    private bool IsValidUsername(string username)
+    {
+        // Define your username constraints here. For example:
+        // Length between 5 and 20 characters and only alphanumeric characters.
+        return !string.IsNullOrEmpty(username) &&
+               username.Length >= 5 &&
+               username.Length <= 20 &&
+               username.All(char.IsLetterOrDigit);
+    }
+    private bool IsValidPassword(string password)
+    {
+        // Example: At least 8 characters, with at least one number and one uppercase letter.
+        return !string.IsNullOrEmpty(password) &&
+               password.Length >= 8 &&
+               password.Any(char.IsDigit) &&
+               password.Any(char.IsUpper);
+    }
+    private bool IsValidEmail(string email)
     {
         try
         {
-            var count = await dbContext.Users.CountDocumentsAsync(_ => true);
-            Console.WriteLine($"Database connection successful, count of users: {count}");
-            ErrorMessage = null;
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            post_first_render = true;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleRegisterUser()
+    {
+        ErrorMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(username_input) || string.IsNullOrWhiteSpace(password_input) || string.IsNullOrWhiteSpace(confirmPassword))
+        {
+            ErrorMessage = "All fields are required.";
+            return;
+        }
+
+        if (!IsValidUsername(username_input))
+        {
+            ErrorMessage = "Username is not valid. It must be 5-20 characters long and contain only letters and numbers.";
+            return;
+        }
+
+        if (!await IsUsernameUnique(username_input))
+        {
+            ErrorMessage = "This username is already taken. Please choose a different one.";
+            return;
+        }
+
+        if (!IsValidEmail(email))
+        {
+            ErrorMessage = "The email address is not in a valid format.";
+            return;
+        }
+
+        if (!IsValidPassword(password_input))
+        {
+            ErrorMessage = "Password does not meet the complexity requirements. It must be at least 8 characters long, contain at least one number, and one uppercase letter.";
+            return;
+        }
+
+        if (password_input != confirmPassword)
+        {
+            ErrorMessage = "The passwords entered do not match.";
+            return;
+        }
+
+        // Hash the password
+        var hashedPassword = HashPassword(password_input);
+
+        // Create and store the new user
+        var newUser = new User
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                Username = username_input,
+                Password = hashedPassword
+            };
+
+        try
+        {
+            await dbContext.Users.InsertOneAsync(newUser);
+            NavigationManager.NavigateTo("/login"); // Redirect to login page on successful registration
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to connect to database: {ex.Message}");
-            ErrorMessage = "Cannot connect to database.";
+            ErrorMessage = $"Failed to register user: {ex.Message}";
         }
     }
 
-    private async Task HandleRegistration()
-    {
-        Console.WriteLine($"Before Insertion: Username = {newUser.Username}, Password = {newUser.Password}");
 
-        
-        if (editContext.Validate())
-        {
-            Console.WriteLine("Validation successful.");
-            if (string.IsNullOrEmpty(newUser.Password) || string.IsNullOrEmpty(newUser.Username))
-            {
-                ErrorMessage = "Username and password cannot be empty.";
-                Console.WriteLine("Username or password validation failed.");
-                return;
-            }
-
-            // Log the username and password about to be inserted
-            Console.WriteLine($"Attempting to insert: Username = {newUser.Username}, Password = {newUser.Password}");
-
-            try
-            {
-                newUser.Password = HashPassword(newUser.Password);
-                await dbContext.Users.InsertOneAsync(newUser);
-                Console.WriteLine("User inserted successfully.");
-                NavigationManager.NavigateTo("/login");
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = "Failed to insert user into database.";
-                Console.WriteLine($"Error inserting user: {ex.Message}");
-            }
-        }
-        else
-        {
-            ErrorMessage = "Form is not valid!";
-            Console.WriteLine("Form validation failed.");
-        }
-
-    }
-
-
-    private string HashPassword(string password)
-    {
-        // This check is redundant but safe
-        if (string.IsNullOrEmpty(password))
-            throw new ArgumentException("Password cannot be empty.", nameof(password));
-
-        return BCrypt.HashPassword(password);
-    }
+    private string HashPassword(string password) => BCrypt.HashPassword(password);
 }
