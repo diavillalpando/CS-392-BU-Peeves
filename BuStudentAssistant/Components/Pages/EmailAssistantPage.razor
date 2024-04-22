@@ -51,6 +51,8 @@ else if (messageSummaries != null)
                         <div></div>
                         <input class="user-input" type="text" @bind="userInput" />
                         <button class="generate-reply-button" @onclick="@(e => Submit(message))">Generate Reply</button>
+                        <button class="reply-button" @onclick="(e) => SendEmail(message.From ,message.To, message.Subject, message.GeneratedReply)">Send Reply</button> <br />
+                        @errorMessage
                     }
                     else
                     {
@@ -85,7 +87,7 @@ else
     private string api_key;
     string googleClientId;
     string googleClientSecret;
-    private string errorMessage= "nothing";
+    private string errorMessage= "";
     private string email;
     private string userInput;
 
@@ -94,7 +96,6 @@ else
         GenerateReply(email, userInput);
     }
 
-    string[] testing = ["songyu@bu.edu", "sycds460@gmail.com", "How are you", "I hope you are getting better."];
     string[] scopes = new[] 
     {
         GmailService.ScopeConstants.GmailReadonly,
@@ -121,7 +122,6 @@ else
     }
     public static UserCredential Authorize(string clientId, string clientSecret, string[] scopes)
     {
-        //GoogleWebAuthorizationBroker.RevokeTokenAsync(new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret }, CancellationToken.None).Wait();
 
         // Initiate authorization flow
         return GoogleWebAuthorizationBroker.AuthorizeAsync(
@@ -165,7 +165,7 @@ else
                 }
             }
             messageOnPage = messageSummaries.Skip((pageIndex - 1) * MaxDisplayedMessages).Take(MaxDisplayedMessages).ToList();
-            
+
         }
         catch (Exception ex)
         {
@@ -321,7 +321,7 @@ else
             }
 
             // remove braces
-            
+
             (string sender, string senderEmail) = ParseNameAndEmail(from);
             (string recipient, string recipientEmail) = ParseNameAndEmail(from);
 
@@ -354,6 +354,7 @@ else
                 gmailService.Users.Messages.Send(message, "me").Execute();
             }
             errorMessage = ("Email sent successfully.");
+
         }
         catch (Exception ex)
         {
@@ -386,7 +387,7 @@ else
         else
         {
             // If the input format is incorrect, throw an exception
-            throw new FormatException("Input string does not match the expected format 'Name <email>'.");
+            return ("", input);
         }
     }
 
