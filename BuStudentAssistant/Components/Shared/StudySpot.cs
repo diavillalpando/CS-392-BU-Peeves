@@ -1,4 +1,8 @@
-﻿namespace StudySpotYelpNameSpace;
+﻿using BuStudentAssistant.Data;
+using BuStudentAssistant.Models;
+using MongoDB.Driver;
+
+namespace StudySpotYelpNameSpace;
 
 internal class StudySpot
 {
@@ -12,11 +16,11 @@ internal class StudySpot
     
 }
 
-internal class Comment{
-    public int Id { get; set; }
-    public DateOnly Date { get; set; }
-    public string? Text { get; set; }
-    public int Stars { get; set;}
-    public int User_Id { get; set; }
-    public string? User_Name { get; set; }
-}
+// internal class Comment{
+//     public int Id { get; set; }
+//     public DateOnly Date { get; set; }
+//     public string? Text { get; set; }
+//     public int Stars { get; set;}
+//     public int User_Id { get; set; }
+//     public string? User_Name { get; set; }
+// }
