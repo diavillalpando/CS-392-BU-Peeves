@@ -1,18 +1,17 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using System.ComponentModel.DataAnnotations;
 
 namespace BuStudentAssistant.Models
 {
     public class User
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
-
+        [Required]
         [BsonElement("username")]
         public string Username { get; set; }
 
+        [Required]
         [BsonElement("password")]
-        public string Password { get; set; } 
+        public string Password { get; set; }
     }
 }
