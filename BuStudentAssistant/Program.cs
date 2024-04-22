@@ -1,4 +1,5 @@
 using BuStudentAssistant.Components;
+using BuStudentAssistant.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpClient();
+builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 
 var app = builder.Build();
 
