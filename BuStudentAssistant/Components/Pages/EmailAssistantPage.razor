@@ -16,8 +16,11 @@
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 @rendermode InteractiveServer
+
 <PageTitle>Email Assistant</PageTitle>
-<h3 class="email-heading">Email Assistant for @email</h3>
+
+<h3>Email Assistant</h3>
+<h4>@email</h4>
 
 @if (loading)
 {
@@ -30,7 +33,7 @@ else if (error)
 else if (messageSummaries != null)
 {
     <ul class="message-list">
-        @foreach (var message in messageSummaries)
+        @foreach (var message in messageOnPage)
         {
             <li>
                 <div class="message-container">
@@ -48,11 +51,6 @@ else if (messageSummaries != null)
                         <div></div>
                         <input class="user-input" type="text" @bind="userInput" />
                         <button class="generate-reply-button" @onclick="@(e => Submit(message))">Generate Reply</button>
-                        <br />
-                        <div></div>
-                        <p class="error-message"> <strong>Error Message: </strong> @errorMessage</p>
-                        <p class="user-input-message"> <strong>User Input: </strong>@userInput</p>
-                        <button class="reply-button" @onclick="(e) => SendEmail(message.From ,message.To, message.Subject, message.GeneratedReply)">Reply</button> <br />
                     }
                     else
                     {
@@ -62,17 +60,24 @@ else if (messageSummaries != null)
             </li>
         }
     </ul>
+     
 }
 else
 {
     <p class="no-emails-message">No emails found.</p>
     <br />
 }
-<link rel="stylesheet" href="EmailAssistantPage.razor.css" />
+    <button @onclick="PreviousPage">Previous</button>
+    <button @onclick="NextPage">Next</button>
+    <p> <strong>Page: </strong> @(pageIndex.ToString())</p>
+
+
 @code {
     private IList<Message> messages;
     private List<Message> displayedMessages;
     private List<EmailMessage> messageSummaries = new List<EmailMessage>();
+    private List<EmailMessage> messageOnPage = new List<EmailMessage>();
+    private int pageIndex = 1;
     private bool loading = true;
     private bool error = false;
     private const int MaxDisplayedMessages = 5;
@@ -102,7 +107,7 @@ else
         api_key = Configuration["ChatGptKey"];
         googleClientId = Configuration["GmailgoogleClientId"];
         googleClientSecret = Configuration["GmailgoogleClientSecret"];
-        await LoadEmails();
+        await LoadEmails(pageIndex);
     }
 
     public class EmailMessage
@@ -115,7 +120,7 @@ else
     }
     public static UserCredential Authorize(string clientId, string clientSecret, string[] scopes)
     {
-        // GoogleWebAuthorizationBroker.RevokeTokenAsync(new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret }, CancellationToken.None).Wait();
+        //GoogleWebAuthorizationBroker.RevokeTokenAsync(new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret }, CancellationToken.None).Wait();
 
         // Initiate authorization flow
         return GoogleWebAuthorizationBroker.AuthorizeAsync(
@@ -127,9 +132,9 @@ else
     }
 
     // displaying emails
-    private async Task LoadEmails()
+    private async Task LoadEmails(int page)
     {
-
+        loading = true;
         try
         {
             UserCredential credential = Authorize(googleClientId, googleClientSecret, scopes);
@@ -141,20 +146,25 @@ else
             var profile = gmailService.Users.GetProfile("me").Execute();
             email = profile.EmailAddress;
 
-            EmailGetter emailGetter = new EmailGetter(credential);
-            messages = emailGetter.GetMessages("me").Take(MaxDisplayedMessages).ToList();
-            displayedMessages = messages.ToList();
-
-            foreach (var message in displayedMessages)
+            if (pageIndex * MaxDisplayedMessages > messageSummaries.Count)
             {
-                messageSummaries.Add(new EmailMessage
-                    {
-                        From = GetSenderEmailAddress(message),
-                        To = GetRecipientEmailAddress(message),
-                        Subject = GetMessageSubject(message),
-                        SummarizedBody = await GetMessageSummary(message)
-                    });
+                EmailGetter emailGetter = new EmailGetter(credential);
+                messages = emailGetter.GetMessages("me").Skip((pageIndex - 1) * MaxDisplayedMessages).Take(MaxDisplayedMessages).ToList();
+                displayedMessages = messages.ToList();
+
+                foreach (var message in displayedMessages)
+                {
+                    messageSummaries.Add(new EmailMessage
+                        {
+                            From = GetSenderEmailAddress(message),
+                            To = GetRecipientEmailAddress(message),
+                            Subject = GetMessageSubject(message),
+                            SummarizedBody = await GetMessageSummary(message)
+                        });
+                }
             }
+            messageOnPage = messageSummaries.Skip((pageIndex - 1) * MaxDisplayedMessages).Take(MaxDisplayedMessages).ToList();
+            
         }
         catch (Exception ex)
         {
@@ -164,9 +174,23 @@ else
         finally
         {
             loading = false;
+            StateHasChanged();
         }
     }
 
+    private void NextPage()
+    {
+        pageIndex++;
+        messageOnPage.Clear(); // Clear previous messages
+        LoadEmails(pageIndex);
+    }
+
+    private void PreviousPage()
+    {
+        pageIndex--;
+        messageOnPage.Clear(); // Clear previous messages
+        LoadEmails(pageIndex);
+    }
 
 
     private static string GetMessageBody(Message message)
