@@ -1,0 +1,45 @@
+﻿@page "/test-mongodb"
+@using BuStudentAssistant.Data
+@using BuStudentAssistant.Models
+@using MongoDB.Driver
+@rendermode InteractiveServer
+
+
+@inject IMongoDbContext dbContext
+
+
+
+<h3>Test MongoDB Connection</h3>
+<p>@message</p>
+
+@code {
+    private string testUsername = "TestUser";
+    private string testPassword = "TestPassword"; // Use a hash in a real scenario
+    private string message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TestInsertData();
+        await TestRetrieveData();
+    }
+
+    private async Task TestInsertData()
+    {
+        var newUser = new User { Username = testUsername, Password = testPassword };
+        await dbContext.Users.InsertOneAsync(newUser);
+        message = "Inserted data successfully.";
+    }
+
+    private async Task TestRetrieveData()
+    {
+        var user = await dbContext.Users.Find(u => u.Username == testUsername).FirstOrDefaultAsync();
+        if (user != null)
+        {
+            message += " Retrieved data successfully.";
+        }
+        else
+        {
+            message = "Failed to retrieve data.";
+        }
+    }
+}
