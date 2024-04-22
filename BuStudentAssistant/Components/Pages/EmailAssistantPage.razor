@@ -16,44 +16,47 @@
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 @rendermode InteractiveServer
-
 <PageTitle>Email Assistant</PageTitle>
-
-<h3>Email Assistant</h3>
-<h4>@email</h4>
+<h3 class="email-heading">Email Assistant for @email</h3>
 
 @if (loading)
 {
-    <p>Loading...</p>
+    <p class="loading-message">Loading...</p>
 }
 else if (error)
 {
-    <p>Error occurred while loading emails. @errorMessage</p>
+    <p class="error-message">Error occurred while loading emails. @errorMessage</p>
 }
 else if (messageSummaries != null)
 {
-    <ul>
+    <ul class="message-list">
         @foreach (var message in messageSummaries)
         {
             <li>
-                <div>
+                <div class="message-container">
                     @if (message!= null)
                     {
-                        <strong>From:</strong> @message.From <br />
-                        <strong>To:</strong> @message.To <br />
-                        <strong>Subject:</strong> @message.Subject <br />
-                        <strong>Summary:</strong> @(message.SummarizedBody.ToString()) <br />
-                        <strong>GeneratedReply: </strong> @message.GeneratedReply <br />
-                        <button @onclick="(e) => SendEmail(message.From ,message.To, message.Subject, message.GeneratedReply)">Reply</button> <br />
-                        <input type="text" @bind="userInput" />
-                        <button @onclick="@(e => Submit(message))">GenerateReply</button>
+                        <strong class="message-detail">From: </strong> @message.From <br />
+                        <div></div>
+                        <strong class="message-detail">To: </strong> @message.To <br />
+                        <div></div>
+                        <strong class="message-detail">Subject: </strong> @message.Subject <br />
+                        <div></div>
+                        <strong class="message-detail">Summary: </strong> @(message.SummarizedBody.ToString()) <br />
+                        <div></div>
+                        <strong class="message-detail">Generated Reply: </strong> @message.GeneratedReply <br />
+                        <div></div>
+                        <input class="user-input" type="text" @bind="userInput" />
+                        <button class="generate-reply-button" @onclick="@(e => Submit(message))">Generate Reply</button>
                         <br />
-                        <p> <strong>Error Message: </strong> @errorMessage</p>
-                        <p> <strong>UserInput: </strong>@userInput</p>
+                        <div></div>
+                        <p class="error-message"> <strong>Error Message: </strong> @errorMessage</p>
+                        <p class="user-input-message"> <strong>User Input: </strong>@userInput</p>
+                        <button class="reply-button" @onclick="(e) => SendEmail(message.From ,message.To, message.Subject, message.GeneratedReply)">Reply</button> <br />
                     }
                     else
                     {
-                        <div>No content available for this message.</div>
+                        <div class="no-content-message">No content available for this message.</div>
                     }
                 </div>
             </li>
@@ -62,11 +65,10 @@ else if (messageSummaries != null)
 }
 else
 {
-    <p>No emails found.</p>
-<br />
+    <p class="no-emails-message">No emails found.</p>
+    <br />
 }
-
-
+<link rel="stylesheet" href="EmailAssistantPage.razor.css" />
 @code {
     private IList<Message> messages;
     private List<Message> displayedMessages;
@@ -97,9 +99,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        api_key = Configuration["ChatGptKey"];
+        /*api_key = Configuration["ChatGptKey"];
         googleClientId = Configuration["GmailgoogleClientId"];
         googleClientSecret = Configuration["GmailgoogleClientSecret"];
+        */
+        api_key = "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";
+        googleClientId = "333907828203-btcnk4m5q6ou2gv7620e4vgaq0i9p3rm.apps.googleusercontent.com";
+        googleClientSecret = "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";
         await LoadEmails();
     }
 

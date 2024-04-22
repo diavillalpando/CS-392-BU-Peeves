@@ -1,0 +1,95 @@
+/* Styles for PageTitle */
+.page-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #D31E31; /* Red color */
+}
+
+/* Styles for email headings */
+.email-heading {
+    font-size: 20px;
+    color: #D31E31; /* Red color */
+}
+
+/* Styles for loading message */
+.loading-message {
+    font-size: 16px;
+    color: #555; /* Dark gray color */
+}
+
+/* Styles for error message */
+.error-message {
+    font-size: 16px;
+    color: red;
+}
+
+/* Styles for message list */
+.message-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+/* Styles for message container */
+.message-container {
+    border: none; /* Remove border */
+    background-color: white; /* Set background color to white */
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+
+/* Styles for message details */
+.message-detail {
+    font-weight: bold;
+}
+
+/* Styles for reply button */
+.reply-button {
+    background-color: #D31E31; /* Red color */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.reply-button:hover {
+    background-color: #9c1a1a; /* Darker red color on hover */
+}
+
+
+/* Styles for user input */
+.user-input {
+    width: 80%;
+    max-width: 300px;
+    margin-top: 10px;
+    padding: 5px;
+}
+
+/* Styles for generate reply button */
+.generate-reply-button {
+    background-color: #D31E31; /* Red color */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.generate-reply-button:hover {
+    background-color: #9c1a1a; /* Darker red color on hover */
+}
+/* Styles for user input message */
+.user-input-message {
+    color: #555; /* Dark gray color */
+}
+
+/* Styles for no content message */
+.no-content-message {
+    font-style: italic;
+    color: #555; /* Dark gray color */
+}
+
+/* Styles for no emails message */
+.no-emails-message {
+    font-style: italic;
+    color: #555; /* Dark gray color */
+}
