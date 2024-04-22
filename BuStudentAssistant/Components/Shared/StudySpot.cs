@@ -16,6 +16,7 @@ internal class Comment{
     public int Id { get; set; }
     public DateOnly Date { get; set; }
     public string? Text { get; set; }
+    public int Stars { get; set;}
     public int User_Id { get; set; }
     public string? User_Name { get; set; }
 }
