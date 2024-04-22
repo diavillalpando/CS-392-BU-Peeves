@@ -47,11 +47,11 @@
                     <input type="range" id="vol" name="vol" min="0" max="5"> *@
 
                     <div class="stars">
-                        <input type="radio" name="rating4" value="1" />
-                        <input type="radio" name="rating4" value="2" />
-                        <input type="radio" name="rating4" value="3" />
-                        <input type="radio" name="rating4" value="4" />
-                        <input type="radio" name="rating4" value="5" />
+                        <input type="radio" name="rating4" value="1" @onchange="@(() => updateInputStars(1))"/>
+                        <input type="radio" name="rating4" value="2" @onchange="@(() => updateInputStars(2))"/>
+                        <input type="radio" name="rating4" value="3" @onchange="@(() => updateInputStars(3))" checked="checked"/>
+                        <input type="radio" name="rating4" value="4" @onchange="@(() => updateInputStars(4))"/>
+                        <input type="radio" name="rating4" value="5" @onchange="@(() => updateInputStars(5))"/>
                         <i></i>
                     </div>
                 </form>
@@ -62,11 +62,9 @@
                         <div>
                             <b>@comment.User_Name</b> 
                             @for (int i = 0; i < @comment.Stars; i++) {
-                                @* <a>&#127775;</a> *@
                                 <span class="fa fa-star checked" ></span>
                             }
                             @for (int i = @comment.Stars; i < 5; i++) {
-                                @* <a>&#127775;</a> *@
                                 <span class="fa fa-star"></span>
                             }
                             @* (@comment.Stars )  *@
@@ -113,20 +111,30 @@ window.setImage = async (imageElementId, imageStream) => {
     bool post_first_render = false;
 
     public string? input_text;
+    public int input_stars;
 
+    private async void update_comments(){
+        spot.Comments = await dbContext.Comments.Find(c => c.Spot_id == spot.Id).SortByDescending(c => c.Date).ToListAsync();
+        StateHasChanged();
+    }
 
+    public void updateInputStars(int star)
+    {
+        input_stars = star;
+    }
 
     private async void post_comment(){
         Console.WriteLine("BUTTON PRESSED");
         var newComment = new Comment { 
-            Date = DateOnly.FromDateTime(DateTime.Now),
+            Date = DateTime.Now,
             Text = input_text,
-            User_id = 0,
+            User_id = -99,
             Spot_id = spot.Id,
-            User_Name = "Dia",
-            Stars = 3
+            User_Name = "Current User",
+            Stars = input_stars
             };
         await dbContext.Comments.InsertOneAsync(newComment);
+        update_comments();
         Console.WriteLine("Inserted Data successfully");
 
     }
@@ -152,8 +160,10 @@ window.setImage = async (imageElementId, imageStream) => {
             Description = d,
         };
 
+        update_comments();
 
-        spot.Comments = c.Select((comment,index) => new Models.Comment
+
+        @* spot.Comments = c.Select((comment,index) => new Models.Comment
         {
             Date = startDate.AddDays(index),
             Text = comment,
@@ -161,7 +171,7 @@ window.setImage = async (imageElementId, imageStream) => {
             User_Name = c_n[index],
             Stars = 3
             
-        }).ToList();
+        }).ToList(); *@
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender) // Runs after the first time the page loads

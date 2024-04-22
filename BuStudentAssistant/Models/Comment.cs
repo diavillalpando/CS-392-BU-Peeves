@@ -11,7 +11,7 @@ namespace BuStudentAssistant.Models
 
         [Required]
         // [BsonElement("username")]
-        public DateOnly Date { get; set; }
+        public DateTime Date { get; set; }
 
         [Required]
         // [BsonElement("username")]
