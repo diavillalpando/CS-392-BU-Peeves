@@ -9,10 +9,16 @@ namespace BuStudentAssistant.Data
 
         public MongoDbContext(IConfiguration configuration)
         {
-            var client = new MongoClient(configuration.GetConnectionString("MongoDB"));
-            _database = client.GetDatabase("LoginDb");
+            var connectionString = configuration.GetConnectionString("MongoDB");
+            Console.WriteLine($"Connecting to MongoDB with: {connectionString}");
+
+            var client = new MongoClient(connectionString);
+            _database = client.GetDatabase("LoginDb"); // replace "yourDatabaseName" with the actual database name
         }
 
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+
+      
+
     }
 }

@@ -1,0 +1,105 @@
+﻿@page "/register"
+@using BuStudentAssistant.Data
+@using BuStudentAssistant.Models
+@using MongoDB.Driver
+@using BCrypt.Net
+@using Microsoft.AspNetCore.Components.Forms
+@inject IMongoDbContext dbContext
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@newUser" OnValidSubmit="HandleRegistration" FormName="UserRegistrationForm">
+    <DataAnnotationsValidator />
+    <ValidationSummary />   
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <InputText id="username" class="form-control" @bind-Value="newUser.Username" />
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <InputText id="password" type="password" class="form-control" @bind-Value="newUser.Password" />
+
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+</EditForm>
+
+@code {
+    private User newUser = new User();
+    public string ErrorMessage { get; set; }
+    private EditContext editContext;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        newUser = new User();
+        editContext = new EditContext(newUser);
+
+        if (dbContext == null)
+        {
+            throw new InvalidOperationException("Database context is not injected properly.");
+        }
+    }
+
+    public async Task TestDatabaseConnection()
+    {
+        try
+        {
+            var count = await dbContext.Users.CountDocumentsAsync(_ => true);
+            Console.WriteLine($"Database connection successful, count of users: {count}");
+            ErrorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to connect to database: {ex.Message}");
+            ErrorMessage = "Cannot connect to database.";
+        }
+    }
+
+    private async Task HandleRegistration()
+    {
+        Console.WriteLine($"Before Insertion: Username = {newUser.Username}, Password = {newUser.Password}");
+
+        
+        if (editContext.Validate())
+        {
+            Console.WriteLine("Validation successful.");
+            if (string.IsNullOrEmpty(newUser.Password) || string.IsNullOrEmpty(newUser.Username))
+            {
+                ErrorMessage = "Username and password cannot be empty.";
+                Console.WriteLine("Username or password validation failed.");
+                return;
+            }
+
+            // Log the username and password about to be inserted
+            Console.WriteLine($"Attempting to insert: Username = {newUser.Username}, Password = {newUser.Password}");
+
+            try
+            {
+                newUser.Password = HashPassword(newUser.Password);
+                await dbContext.Users.InsertOneAsync(newUser);
+                Console.WriteLine("User inserted successfully.");
+                NavigationManager.NavigateTo("/login");
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = "Failed to insert user into database.";
+                Console.WriteLine($"Error inserting user: {ex.Message}");
+            }
+        }
+        else
+        {
+            ErrorMessage = "Form is not valid!";
+            Console.WriteLine("Form validation failed.");
+        }
+
+    }
+
+
+    private string HashPassword(string password)
+    {
+        // This check is redundant but safe
+        if (string.IsNullOrEmpty(password))
+            throw new ArgumentException("Password cannot be empty.", nameof(password));
+
+        return BCrypt.HashPassword(password);
+    }
+}
