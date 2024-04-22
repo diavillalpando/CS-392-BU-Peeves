@@ -1,0 +1,43 @@
+﻿@page "/login"
+@using BuStudentAssistant.Data
+@using BuStudentAssistant.Models
+@using MongoDB.Driver
+@using BCrypt.Net
+@using Microsoft.AspNetCore.Components.Forms  // Ensure this is added
+@inject IMongoDbContext dbContext
+@inject NavigationManager NavigationManager
+
+<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+    <InputText @bind-value="loginModel.Username" @bind-value:event="oninput" />
+    <InputText @bind-value="loginModel.Password" @bind-value:event="oninput" type="password" />
+    <button type="submit">Login</button>
+</EditForm>
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    public string? ErrorMessage { get; set; }  // Make nullable
+
+    private async Task HandleLogin()
+    {
+        var user = await dbContext.Users.Find(u => u.Username == loginModel.Username).FirstOrDefaultAsync();
+        if (user != null && VerifyPassword(loginModel.Password, user.Password))
+        {
+            NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            ErrorMessage = "Invalid username or password.";
+        }
+    }
+
+    private bool VerifyPassword(string inputPassword, string storedHash)
+    {
+        return BCrypt.Verify(inputPassword, storedHash);
+    }
+
+    private class LoginModel
+    {
+        public string? Username { get; set; } = string.Empty;
+        public string? Password { get; set; } = string.Empty;
+    }
+}
