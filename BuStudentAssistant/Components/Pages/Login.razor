@@ -1,43 +1,84 @@
 ﻿@page "/login"
+@rendermode InteractiveServer
 @using BuStudentAssistant.Data
 @using BuStudentAssistant.Models
 @using MongoDB.Driver
 @using BCrypt.Net
-@using Microsoft.AspNetCore.Components.Forms  // Ensure this is added
 @inject IMongoDbContext dbContext
 @inject NavigationManager NavigationManager
 
-<EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
-    <InputText @bind-value="loginModel.Username" @bind-value:event="oninput" />
-    <InputText @bind-value="loginModel.Password" @bind-value:event="oninput" type="password" />
-    <button type="submit">Login</button>
-</EditForm>
+@if (post_first_render)
+{
+    <div class="form-container">
+        <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <InputText id="password" class="form-control" @bind-Value="loginModel.Password" type="password" />
+            </div>
+            <button type="submit" class="submit-button">Login</button>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="error">@ErrorMessage</div>
+        }
+    </div>
+}
 
 @code {
     private LoginModel loginModel = new LoginModel();
-    public string? ErrorMessage { get; set; }  // Make nullable
+    private bool post_first_render = false;
+    public string ErrorMessage { get; set; }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            post_first_render = true;
+            StateHasChanged();
+        }
+    }
     private async Task HandleLogin()
     {
-        var user = await dbContext.Users.Find(u => u.Username == loginModel.Username).FirstOrDefaultAsync();
-        if (user != null && VerifyPassword(loginModel.Password, user.Password))
+        // Reset error message.
+        ErrorMessage = string.Empty;
+
+        // Check for empty username or password fields first.
+        if (string.IsNullOrWhiteSpace(loginModel.Username) || string.IsNullOrWhiteSpace(loginModel.Password))
         {
-            NavigationManager.NavigateTo("/");
+            ErrorMessage = "Please enter both a username and a password.";
+            return;
+        }
+
+        var user = await dbContext.Users.Find(u => u.Username == loginModel.Username).FirstOrDefaultAsync();
+        if (user != null)
+        {
+            // If the user exists, we verify the password.
+            if (BCrypt.Verify(loginModel.Password, user.Password))
+            {
+                // Password is correct, navigate to the home page.
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                // Password is incorrect, give specific feedback.
+                ErrorMessage = "The password you entered is incorrect. Please try again.";
+            }
         }
         else
         {
-            ErrorMessage = "Invalid username or password.";
+            // Username does not exist in the database, give specific feedback.
+            ErrorMessage = "The username you entered does not exist. Please check your username or register for a new account.";
         }
-    }
-
-    private bool VerifyPassword(string inputPassword, string storedHash)
-    {
-        return BCrypt.Verify(inputPassword, storedHash);
     }
 
     private class LoginModel
     {
-        public string? Username { get; set; } = string.Empty;
-        public string? Password { get; set; } = string.Empty;
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 }
