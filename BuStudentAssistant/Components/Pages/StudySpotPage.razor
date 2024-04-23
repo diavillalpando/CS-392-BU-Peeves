@@ -15,14 +15,14 @@
     <PageTitle>@spot.Name</PageTitle>
 
     
-    <img id = "banner" src = "https://www.bu.edu/files/2018/12/educational-resource-center-StudySpots-6.jpg">
+    <img id = "banner" src = "@spot.Image">
     <div id = "banner_text">
         <a href = "studySpotYelp"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
         <div>
             <h1 class = "title">
-            @spot.Name (@spot.Id)
+            @spot.Name (@spot._id)
             </h1>
-            <div>&#127775;: @spot.Score/5.0</div>
+            <div>&#127775;: 0/5.0</div>
             <div>Address: @spot.Address</div>
         </div>
     </div>
@@ -32,7 +32,7 @@
         <p>@spot.Description</p>
         <hr>
         <h3>Comments:</h3>
-        @if (@spot.Comments == null){
+        @if (spot_comments == null){
             <div>loading comments...</div>
         }else{
             
@@ -57,7 +57,7 @@
                 </form>
                 
                 
-                @foreach (var comment in @spot.Comments){
+                @foreach (var comment in spot_comments){
                     <li>
                         <div>
                             <b>@comment.User_Name</b> 
@@ -106,7 +106,9 @@ window.setImage = async (imageElementId, imageStream) => {
     [Parameter]
     public string? studySpot_id { get; set; }
     
-    Sy.StudySpot spot;
+    StudySpot spot;
+
+    List<Comment> spot_comments;
     Sy.GoogleMaps gmaps;
     bool post_first_render = false;
 
@@ -114,7 +116,7 @@ window.setImage = async (imageElementId, imageStream) => {
     public int input_stars;
 
     private async void update_comments(){
-        spot.Comments = await dbContext.Comments.Find(c => c.Spot_id == spot.Id).SortByDescending(c => c.Date).ToListAsync();
+        spot_comments = await dbContext.Comments.Find(c => c.Spot_id == 0).SortByDescending(c => c.Date).ToListAsync();
         StateHasChanged();
     }
 
@@ -129,7 +131,7 @@ window.setImage = async (imageElementId, imageStream) => {
             Date = DateTime.Now,
             Text = input_text,
             User_id = -99,
-            Spot_id = spot.Id,
+            Spot_id = 0,
             User_Name = "Current User",
             Stars = input_stars
             };
@@ -152,12 +154,12 @@ window.setImage = async (imageElementId, imageStream) => {
         var startDate = DateOnly.FromDateTime(DateTime.Now);
         @* -------------- END OF TESTING -------------- *@
 
-        spot = new Sy.StudySpot{
-            Id = int.Parse(studySpot_id),
+        spot = new StudySpot{
+            _id = new MongoDB.Bson.ObjectId(),
             Name = n,
             Address = a,
-            Map_Marker = 0,
             Description = d,
+            Image = "https://www.bu.edu/dos/files/2017/12/IMG_2216.jpg"
         };
 
         update_comments();
