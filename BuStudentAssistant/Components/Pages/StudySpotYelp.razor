@@ -85,7 +85,7 @@ else
     List<StudySpot> study_spots;
     bool post_first_render = false;
 
-    @* Configuration for the maap *@
+    @* Configuration for the map *@
     private string _googleMapsApiKey = "";
 	private GeolocationData _jsMapCenter = new GeolocationData("Boston University");
 	private byte _jsMapZoomLevel = 16;
@@ -93,8 +93,21 @@ else
     private int _mapWidth;
 
     private double getScore(MongoDB.Bson.ObjectId spot_id){
-        return 0;
+        var result = dbContext.Comments.Aggregate()
+            .Match(c => c.Spot_id == spot_id)
+            .Group(c => c.Spot_id, g => 
+                new {
+                    Spot_id = g.Key,
+                    AveragePrice = g.Average(p => p.Stars)
+                })
+            .ToList();
+        return Math.Round(result.Select(_ => _.AveragePrice).FirstOrDefault(), 1);
     }
+
+    private double getReviewNum(MongoDB.Bson.ObjectId spot_id){
+        return dbContext.Comments.Find(c => c.Spot_id == spot_id).CountDocuments();
+    }
+
     protected override async Task OnInitializedAsync() // Runs when the page loads
     {
         _googleMapsApiKey = Configuration["GMapsApiKey"];

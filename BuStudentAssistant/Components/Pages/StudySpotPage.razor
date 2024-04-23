@@ -23,7 +23,7 @@
                 <h1 class = "title">
                 @spot.Name 
                 </h1>
-                <div>&#127775;: 0/5.0</div>
+                <div>&#127775;: @getScore()/5.0</div>
                 <div>Address: @spot.Address</div>
             </div>
         </div>
@@ -119,6 +119,17 @@ window.setImage = async (imageElementId, imageStream) => {
         spot_comments = await dbContext.Comments.Find(c => c.Spot_id == spot._id).SortByDescending(c => c.Date).ToListAsync();
         StateHasChanged();
     }
+    private double getScore(){
+        var result = dbContext.Comments.Aggregate()
+            .Match(c => c.Spot_id == spot._id)
+            .Group(c => c.Spot_id, g => 
+                new {
+                    Spot_id = g.Key,
+                    AveragePrice = g.Average(p => p.Stars)
+                })
+            .ToList();
+        return Math.Round(result.Select(_ => _.AveragePrice).FirstOrDefault(), 1);
+    }
 
     public void updateInputStars(int star)
     {
@@ -126,7 +137,6 @@ window.setImage = async (imageElementId, imageStream) => {
     }
 
     private async void post_comment(){
-        Console.WriteLine("BUTTON PRESSED");
         var newComment = new Comment { 
             Date = DateTime.Now,
             Text = input_text,
@@ -137,7 +147,7 @@ window.setImage = async (imageElementId, imageStream) => {
             };
         await dbContext.Comments.InsertOneAsync(newComment);
         update_comments();
-        Console.WriteLine("Inserted Data successfully");
+        Console.WriteLine($"Uploaded comment '{newComment._id}' to '{spot._id}'");
 
     }
     protected override async Task OnInitializedAsync() // Runs when the page loads
