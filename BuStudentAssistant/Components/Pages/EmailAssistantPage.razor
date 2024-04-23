@@ -49,8 +49,8 @@ else if (messageSummaries != null)
                         <div></div>
                         <strong class="message-detail">Generated Reply: </strong> @message.GeneratedReply <br />
                         <div></div>
-                        <input class="user-input" type="text" @bind="userInput" />
-                        <button class="generate-reply-button" @onclick="@(e => Submit(message))">Generate Reply</button>
+                        <input type="text" @bind="userInput" @oninput="UpdateUserInput" />
+                        <button class="generate-reply-button" @onclick="(() => Submit(message))">Generate Reply</button>
                         <button class="reply-button" @onclick="(e) => SendEmail(message.From ,message.To, message.Subject, message.GeneratedReply)">Send Reply</button> <br />
                         @errorMessage
                     }
@@ -94,7 +94,9 @@ else
     private void Submit(EmailMessage email)
     {
         GenerateReply(email, userInput);
+        StateHasChanged();
     }
+    private void UpdateUserInput(ChangeEventArgs e) => userInput = e.Value.ToString();
 
     string[] scopes = new[] 
     {
