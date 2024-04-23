@@ -23,7 +23,7 @@ namespace BuStudentAssistant.Models
 
         [Required]
         // [BsonElement("username")]
-        public int Spot_id { get; set;}
+        public MongoDB.Bson.ObjectId Spot_id { get; set;}
 
         [Required]
         // [BsonElement("username")]
