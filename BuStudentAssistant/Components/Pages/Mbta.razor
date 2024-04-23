@@ -1,0 +1,126 @@
+﻿@page "/Mbta"
+@rendermode InteractiveServer
+@using System.Net.Http
+@using System.IO
+@using System.Runtime.Serialization.Json
+@using System.Text.Json.Serialization
+@using System.Text.Json
+@using System;
+@using System.Collections.Generic;
+@using System.Runtime.Serialization;
+@using System.Linq;
+
+<h3>MBTA Vehicle Info</h3>
+
+<form @onsubmit="GetVehicleInfo">
+    <label for="Direction">Choose a Direction:</label>
+    <select name="Direction" id="Direction" @bind="SelectedDirection">
+        <option value="Inbound">Inbound</option>
+        <option value="Outbound">Outbound</option>
+    </select>
+    <br />
+
+    <label for="Stops">Choose a stop:</label>
+    <select name="Stops" id="Stops" @bind="SelectedStop">
+        <option value="Government Center">Government Center</option>
+        <option value="Park Street">Park Street</option>
+        <option value="Boylston">Boylston</option>
+        <option value="Arlington">Arlington</option>
+        <option value="Copley">Copley</option>
+        <option value="Hynes Convention Center">Hynes Convention Center</option>
+        <option value="Kenmore">Kenmore</option>
+        <option value="Blandford Street">Blandford Street</option>
+        <option value="Boston University East">Boston University East</option>
+        <option value="Boston University Central">Boston University Central</option>
+        <option value="Amory Street">Amory Street</option>
+        <option value="Babcock Street">Babcock Street</option>
+        <option value="Packard's Corner">Packard's Corner</option>
+        <option value="Harvard Avenue">Harvard Avenue</option>
+        <option value="Griggs Street">Griggs Street</option>
+        <option value="Allston Street">Allston Street</option>
+        <option value="Warren Street">Warren Street</option>
+        <option value="Washington Street">Washington Street</option>
+        <option value="Sutherland Road">Sutherland Road</option>
+        <option value="Chiswick Road">Chiswick Road</option>
+        <option value="Chestnut Hill Avenue">Chestnut Hill Avenue</option>
+        <option value="South Street">South Street</option>
+        <option value="Boston College">Boston College</option>
+    </select>
+
+    <button type="submit">Get Vehicle Details</button>
+</form>
+
+@if (VehicleInfo != null)
+{
+    <h4>Arrival Time: @VehicleInfo.ArrivalTime</h4>
+    <h4>Status: @VehicleInfo.Status</h4>
+}
+
+@code {
+    private string SelectedDirection { get; set; } = "0";
+    private string SelectedStop { get; set; } = "0";
+    private VehicleInfoResponse VehicleInfo { get; set; }
+
+    private async Task GetVehicleInfo()
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            var apiKey = "5e809ee23cfb47d9ae73f773da5e4d8e";
+            var baseUrl = "https://api-v3.mbta.com/predictions";
+            var direction = SelectedDirection == "Inbound" ? "0" : "1";
+            var stop = SelectedStop;
+            var get_url = $"{baseUrl}?filter[route]=Green-B&filter[direction_id]={direction}&filter[stop]={stop}&sort=departure_time&api_key={apiKey}";
+            HttpResponseMessage response = await client.GetAsync(get_url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                using (Stream responseStream = await response.Content.ReadAsStreamAsync())
+                {
+                    var serializer = new DataContractJsonSerializer(typeof(PredictionResponse));
+                    var predictionResponse = (PredictionResponse)serializer.ReadObject(responseStream);
+                    var status = predictionResponse?.Data.FirstOrDefault()?.Attributes?.Status ?? "Status not available";
+                    var arrivalTime = predictionResponse?.Data.FirstOrDefault()?.Attributes?.ArrivalTime ?? "Arrival time not available";
+                    VehicleInfo = new VehicleInfoResponse { Status = status, ArrivalTime = arrivalTime };
+                }
+            }
+            else
+            {
+                throw new Exception($"Failed to fetch arrival time for {SelectedDirection} train at {SelectedStop}. Status code: {response.StatusCode}");
+            }
+        }
+    }
+
+    [DataContract]
+    public class VehicleInfoResponse
+    {
+        [DataMember(Name = "status")]
+        public string Status { get; set; }
+
+        [DataMember(Name = "arrival_time")]
+        public string ArrivalTime { get; set; }
+    }
+
+    [DataContract]
+    public class PredictionResponse
+    {
+        [DataMember(Name = "data")]
+        public List<PredictionData> Data { get; set; }
+    }
+
+    [DataContract]
+    public class PredictionData
+    {
+        [DataMember(Name = "attributes")]
+        public PredictionAttributes Attributes { get; set; }
+    }
+
+    [DataContract]
+    public class PredictionAttributes
+    {
+        [DataMember(Name = "status")]
+        public string Status { get; set; }
+
+        [DataMember(Name = "arrival_time")]
+        public string ArrivalTime { get; set; }
+    }
+}
