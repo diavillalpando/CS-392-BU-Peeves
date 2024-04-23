@@ -19,6 +19,8 @@
     <PackageReference Include="Betalgo.OpenAI" Version="7.4.7" />
     <PackageReference Include="Betalgo.OpenAI.GPT3" Version="6.8.4" />
     <PackageReference Include="Google.Apis.Gmail.v1" Version="1.67.0.3287" />
+    <PackageReference Include="Majorsoft.Blazor.Components.Common.JsInterop" Version="1.5.0" />
+    <PackageReference Include="Majorsoft.Blazor.Components.Maps" Version="1.5.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.4">
       <PrivateAssets>all</PrivateAssets>

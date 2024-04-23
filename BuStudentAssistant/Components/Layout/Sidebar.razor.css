@@ -10,16 +10,17 @@ html {
     height: 100%;
     margin: 0;
     padding: 0;
+    z-index: 99;
   }
   
 body {
-    min-height: 150vh; /* Adjust this value as needed to make the page taller */
     margin: 0;
     padding: 0;
     background: linear-gradient(180deg, white 50%, #E77A7A 100%);
     background-attachment: fixed; /* This will fix the background in place, covering the entire page */
     display: flex;
     flex-direction: column;
+    z-index: 99;
   }
 
 .marvel-bold {
@@ -28,6 +29,7 @@ body {
   }
 
 *{
+      z-index: 99;
       list-style: none;
       text-decoration: none;
       margin: 0px;
@@ -109,7 +111,7 @@ body.active .wrapper .section{
   right: 0;
   left: auto;
   width: 100%;
-  z-index: 999;
+  z-index: 10001;
 
 }
 
