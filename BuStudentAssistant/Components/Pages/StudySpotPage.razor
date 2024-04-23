@@ -144,36 +144,11 @@ window.setImage = async (imageElementId, imageStream) => {
     {
 
         gmaps = new Sy.GoogleMaps(Configuration, JS, Http, ClientFactory);
-
-        @* ----------- THIS IS FOR TESTING ----------- *@
-        string n = "Mugar Memorial Library";
-        string a = "771 Commonwealth Ave";
-        string d = "Mugar is a second home for many BU students during finals. It will stay open 24 hours from Wednesday, December 13, through Friday, December 22, at 11 pm. The library has seven floors and the largest computer lounge on campus—and the floors get quieter the higher you go. The ground floor makes for an ideal group study environment.";
-        string[] c = {"This is my favorite study spot ever!", "I really don't like the way it smells", "AVOID AT ALL COSTS"};
-        string[] c_n = {"Bob", "Sue", "Jane"};
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        @* -------------- END OF TESTING -------------- *@
-
-        spot = new StudySpot{
-            _id = new MongoDB.Bson.ObjectId(),
-            Name = n,
-            Address = a,
-            Description = d,
-            Image = "https://www.bu.edu/dos/files/2017/12/IMG_2216.jpg"
-        };
-
+        spot = await dbContext.StudySpots.Find(s => s._id.ToString() == studySpot_id).FirstAsync();
         update_comments();
 
 
-        @* spot.Comments = c.Select((comment,index) => new Models.Comment
-        {
-            Date = startDate.AddDays(index),
-            Text = comment,
-            User_id = index,
-            User_Name = c_n[index],
-            Stars = 3
-            
-        }).ToList(); *@
+        
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender) // Runs after the first time the page loads

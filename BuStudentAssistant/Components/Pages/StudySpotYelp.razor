@@ -36,9 +36,9 @@ else
                     <img src = "@spot.Image">
                     <div>
                         
-                        <div>(@spot._id) @spot.Name </div>
-                        <div>Stars: -1/5.0</div>
-                        <div>Address: @spot.Address</div>
+                        <div><b>@spot.Name</b> </div>
+                        <div>@getScore(@spot._id)&#127775;</div>
+                        <div>@spot.Address</div>
                     </div>
                     
 
@@ -92,24 +92,14 @@ else
     private int _mapHeight;
     private int _mapWidth;
 
-
+    private double getScore(MongoDB.Bson.ObjectId spot_id){
+        return 0;
+    }
     protected override async Task OnInitializedAsync() // Runs when the page loads
     {
         _googleMapsApiKey = Configuration["GMapsApiKey"];
-        string[] places = {"Mugar Memorial Library","Educational Resource Center","Pickering Educational Resources Library","Science & Engineering Library","HoJo","Center for Computing & Data Sciences","College of Arts & Sciences Think Tank","Stone Science Library","School of Theology Library","Ziskind Lounge","Dean’s Study Lounge","College of General Studies Lounges"};
-        string[] addresses = {"771 Commonwealth Ave","100 Bay State Road, fifth floor","Wheelock College of Education & Human Development 2 Silber Way","38 Cummington Mall","575 Commonwealth Ave., eighth floor","665 Commonwealth Ave.","725 Commonwealth Ave., Room 105","725 Commonwealth Ave., Room 440","745 Commonwealth Ave., second floor","George Sherman Union 775 Commonwealth Ave., second floor", "George Sherman Union 775 Commonwealth Ave., third floor", "871 Commonwealth Ave."};
-        @* study_spots = places.Select((place,index) => new StudySpot
-        {
-            Name = place,
-            Address = addresses[index],
-            Image = "https://www.bu.edu/dos/files/2017/12/IMG_2216.jpg",
-        }).ToList(); *@
 
         study_spots = await dbContext.StudySpots.Find(s => s._id != null).SortBy(s => s._id).ToListAsync();
-
-        List<Comment> spot_comments = await dbContext.Comments.Find(c => c.Spot_id == 0).SortByDescending(c => c.Date).ToListAsync();
-
-        Console.WriteLine("STUDY SPOTS: "+ spot_comments.Count);
         
         StateHasChanged();
     }
