@@ -18,7 +18,8 @@ namespace BuStudentAssistant.Data
 
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
 
-      
+        public IMongoCollection<Comment> Comments => _database.GetCollection<Comment>("Comments");
 
+        public IMongoCollection<StudySpot> StudySpots => _database.GetCollection<StudySpot>("StudySpots");
     }
 }

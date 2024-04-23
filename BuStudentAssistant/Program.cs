@@ -1,6 +1,12 @@
 using BuStudentAssistant.Components;
 using BuStudentAssistant.Data;
 using BuStudentAssistant.Services;
+using Majorsoft.Blazor.Components.Maps;
+using Majorsoft.Blazor.Components.Common.JsInterop;
+using BuStudentAssistant.Data;
+using BuStudentAssistant.Services;
+using Majorsoft.Blazor.Components.Maps;
+using Majorsoft.Blazor.Components.Common.JsInterop;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +16,13 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
 builder.Services.AddScoped<UserService>();
+
+builder.Services.AddMapExtensions();
+builder.Services.AddJsInteropExtensions();
+builder.Services.AddSingleton<IMongoDbContext, MongoDbContext>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddMapExtensions();
+builder.Services.AddJsInteropExtensions();
 
 var app = builder.Build();
 

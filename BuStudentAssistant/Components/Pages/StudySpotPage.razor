@@ -1,0 +1,177 @@
+﻿@page "/studySpotYelp/{studySpot_id}"
+@rendermode InteractiveServer
+@using Sy = StudySpotYelpNameSpace
+@using BuStudentAssistant.Data
+@using BuStudentAssistant.Models
+@using MongoDB.Driver
+@inject IConfiguration Configuration
+@inject IHttpClientFactory ClientFactory
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject IMongoDbContext dbContext
+@inject NavigationManager NavigationManager
+
+
+@if( post_first_render ){
+    @if (spot != null){
+        <PageTitle>@spot.Name</PageTitle>
+
+        <img id = "banner" src = "@spot.Image">
+        <div id = "banner_text">
+            <a href = "studySpotYelp"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+            <div>
+                <h1 class = "title">
+                @spot.Name 
+                </h1>
+                <div>&#127775;: @getScore()/5.0</div>
+                <div>Address: @spot.Address</div>
+            </div>
+        </div>
+        
+        <div id = "information">
+            
+            <p>@spot.Description</p>
+            <hr>
+            <h3>Comments:</h3>
+            @if (spot_comments == null){
+                <div>loading comments...</div>
+            }else{
+                
+                <ul id = "comment_box">
+                    <form method="post" @onsubmit="post_comment" @formname="comment-form">
+                        <input id = "comment_input_text" type="text" @bind-value="input_text">
+                        @* <button class="btn btn-primary" @onclick="post_comment">Comment</button> *@
+
+                        <input type="submit" value="Comment">
+
+                        @* <label for="vol">Volume (between 0 and 50):</label>
+                        <input type="range" id="vol" name="vol" min="0" max="5"> *@
+
+                        <div class="stars">
+                            <input type="radio" name="rating4" value="1" @onchange="@(() => updateInputStars(1))"/>
+                            <input type="radio" name="rating4" value="2" @onchange="@(() => updateInputStars(2))"/>
+                            <input type="radio" name="rating4" value="3" @onchange="@(() => updateInputStars(3))" checked="checked"/>
+                            <input type="radio" name="rating4" value="4" @onchange="@(() => updateInputStars(4))"/>
+                            <input type="radio" name="rating4" value="5" @onchange="@(() => updateInputStars(5))"/>
+                            <i></i>
+                        </div>
+                    </form>
+                    
+                    
+                    @foreach (var comment in spot_comments){
+                        <li>
+                            <div>
+                                <b>@comment.User_Name</b> 
+                                @for (int i = 0; i < @comment.Stars; i++) {
+                                    <span class="fa fa-star checked" ></span>
+                                }
+                                @for (int i = @comment.Stars; i < 5; i++) {
+                                    <span class="fa fa-star"></span>
+                                }
+                                @* (@comment.Stars )  *@
+                                @comment.Date
+                            </div>
+                            @comment.Text
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    }
+    <div id = "map_box">
+        <a href = "https://www.google.com/maps/place/@spot.Address"><img id = "map"></a>
+    </div>
+    
+    
+    
+    
+}else{
+    <div>loading...</div>
+}
+
+<script> //Script that updates an image 
+window.setImage = async (imageElementId, imageStream) => {
+    const arrayBuffer = await imageStream.arrayBuffer();
+    const blob = new Blob([arrayBuffer]);
+    const url = URL.createObjectURL(blob);
+    const image = document.getElementById(imageElementId);
+    image.onload = () => {
+    URL.revokeObjectURL(url);
+    }
+    image.src = url;
+}
+</script>
+
+@code {
+    [Parameter]
+    public string? studySpot_id { get; set; }
+    
+    StudySpot spot;
+
+    List<Comment> spot_comments;
+    Sy.GoogleMaps gmaps;
+    bool post_first_render = false;
+
+    public string? input_text;
+    public int input_stars;
+
+    private async void update_comments(){
+        spot_comments = await dbContext.Comments.Find(c => c.Spot_id == spot._id).SortByDescending(c => c.Date).ToListAsync();
+        StateHasChanged();
+    }
+    private double getScore(){
+        var result = dbContext.Comments.Aggregate()
+            .Match(c => c.Spot_id == spot._id)
+            .Group(c => c.Spot_id, g => 
+                new {
+                    Spot_id = g.Key,
+                    AveragePrice = g.Average(p => p.Stars)
+                })
+            .ToList();
+        return Math.Round(result.Select(_ => _.AveragePrice).FirstOrDefault(), 1);
+    }
+
+    public void updateInputStars(int star)
+    {
+        input_stars = star;
+    }
+
+    private async void post_comment(){
+        var newComment = new Comment { 
+            Date = DateTime.Now,
+            Text = input_text,
+            User_id = -99,
+            Spot_id = spot._id,
+            User_Name = "Current User",
+            Stars = input_stars
+            };
+        await dbContext.Comments.InsertOneAsync(newComment);
+        update_comments();
+        Console.WriteLine($"Uploaded comment '{newComment._id}' to '{spot._id}'");
+
+    }
+    protected override async Task OnInitializedAsync() // Runs when the page loads
+    {
+        input_stars = 3;
+        gmaps = new Sy.GoogleMaps(Configuration, JS, Http, ClientFactory);
+        spot = await dbContext.StudySpots.Find(s => s._id.ToString() == studySpot_id).FirstAsync();
+        update_comments();
+        
+
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender) // Runs after the first time the page loads
+    {
+        if (firstRender)
+        {
+            try{
+                gmaps.Maps_Photo_Marker(spot.Address,"map");
+                post_first_render = true;
+                StateHasChanged();
+            }catch (Exception ex){
+                Console.WriteLine($"Error occurred: '{ex.Message}' going to reload and try again");
+                NavigationManager.NavigateTo($"/studySpotYelp/{studySpot_id}",forceLoad: true);
+            }
+            
+        }
+    }
+}
