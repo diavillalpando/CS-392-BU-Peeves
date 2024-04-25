@@ -7,6 +7,9 @@
 BuStudentAssistant/appsettings.Development.json
 BuStudentAssistant/appsettings.json
 
+# MongoDB Database Contents
+BuStudentAssistant/mongoDB/*
+
 # User-specific files
 *.rsuser
 *.suo
