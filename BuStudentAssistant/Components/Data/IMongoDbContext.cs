@@ -10,6 +10,8 @@ namespace BuStudentAssistant.Data
         IMongoCollection<Comment> Comments { get; }
 
         IMongoCollection<StudySpot> StudySpots { get; }
+
+        IMongoCollection<BusyScore> BusyScores { get; }
         // Define other collections and methods that your context should expose
     }
 

@@ -21,5 +21,7 @@ namespace BuStudentAssistant.Data
         public IMongoCollection<Comment> Comments => _database.GetCollection<Comment>("Comments");
 
         public IMongoCollection<StudySpot> StudySpots => _database.GetCollection<StudySpot>("StudySpots");
+
+        public IMongoCollection<BusyScore> BusyScores => _database.GetCollection<BusyScore>("BusyScores");
     }
 }
