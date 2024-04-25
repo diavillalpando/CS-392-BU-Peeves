@@ -1,5 +1,6 @@
 ﻿@page "/studySpotYelp/{studySpot_id}"
 @rendermode InteractiveServer
+@using Microsoft.EntityFrameworkCore
 @using Sy = StudySpotYelpNameSpace
 @using BuStudentAssistant.Data
 @using BuStudentAssistant.Models
@@ -29,22 +30,24 @@
         </div>
         
         <div id = "information">
+
             <form method = "post" @onsubmit="post_busyScore" @formname="busyScore-form">
-                @* <input type="submit" value="1"> *@
                 <button type="submit" @onclick="() => input_busyScore = 1"> <i class="fas fa-user"></i></button>
                 <button type="submit" @onclick="() => input_busyScore = 2"> <i class="fas fa-user-friends"></i></button>
                 <button type="submit" @onclick="() => input_busyScore = 3"> <i class="fas fa-users"></i></button>
-                @* <a type="submit"></a> *@
             </form>
+
+            @* ---------------- Remove after Dev ---------------- *@
             @DateTime.Now.Kind
             @DateTime.Now.ToUniversalTime()
             @if (spot_busyScores != null){
                 <ul>
                     @foreach(var b in spot_busyScores){
-                        <li>@b.Score, @b.Date.ToLocalTime() (@timeAgo(@b.Date))</li>
+                        <li>@b.Score, @b.Date.ToLocalTime() (@minutesElapsedSince(@b.Date))</li>
                     }
                 </ul>
             }
+            @* ---------------- End of remove ---------------- *@
             
             
             <p>@spot.Description</p>
@@ -132,9 +135,11 @@ window.setImage = async (imageElementId, imageStream) => {
 
     public string? input_text;
     public int input_stars;
+
+    public double spot_busyScore;
     public int input_busyScore;
 
-    private double timeAgo(DateTime d){
+    private double minutesElapsedSince(DateTime d){
 
         return DateTime.Now.ToUniversalTime().Subtract(d).Minutes;
     }
@@ -144,6 +149,10 @@ window.setImage = async (imageElementId, imageStream) => {
     }
     private async void update_busyScores(){
         spot_busyScores = await dbContext.BusyScores.Find(b => b.Spot_id == spot._id).SortByDescending(b => b.Date).ToListAsync();
+        var filteredResults = from score in spot_busyScores
+						where minutesElapsedSince(score.Date) < 60
+                        select score;
+        
         StateHasChanged();
     }
     private double getScore(){
