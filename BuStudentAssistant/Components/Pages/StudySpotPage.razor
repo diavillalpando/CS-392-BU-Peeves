@@ -36,10 +36,12 @@
                 <button type="submit" @onclick="() => input_busyScore = 3"> <i class="fas fa-users"></i></button>
                 @* <a type="submit"></a> *@
             </form>
+            @DateTime.Now.Kind
+            @DateTime.Now.ToUniversalTime()
             @if (spot_busyScores != null){
                 <ul>
                     @foreach(var b in spot_busyScores){
-                        <li>@b.Score, @b.Date</li>
+                        <li>@b.Score, @b.Date.ToLocalTime() (@timeAgo(@b.Date))</li>
                     }
                 </ul>
             }
@@ -84,7 +86,7 @@
                                     <span class="fa fa-star"></span>
                                 }
                                 @* (@comment.Stars )  *@
-                                @comment.Date
+                                @comment.Date.ToLocalTime()
                             </div>
                             @comment.Text
                         </li>
@@ -132,6 +134,10 @@ window.setImage = async (imageElementId, imageStream) => {
     public int input_stars;
     public int input_busyScore;
 
+    private double timeAgo(DateTime d){
+
+        return DateTime.Now.ToUniversalTime().Subtract(d).Minutes;
+    }
     private async void update_comments(){
         spot_comments = await dbContext.Comments.Find(c => c.Spot_id == spot._id).SortByDescending(c => c.Date).ToListAsync();
         StateHasChanged();
@@ -158,8 +164,8 @@ window.setImage = async (imageElementId, imageStream) => {
     }
 
     private async void post_comment(){
-        var newComment = new Comment { 
-            Date = DateTime.Now,
+        var newComment = new Comment {  
+            Date = DateTime.Now, // MongoDB stores by default in UTC
             Text = input_text,
             User_id = -99,
             Spot_id = spot._id,
@@ -173,7 +179,7 @@ window.setImage = async (imageElementId, imageStream) => {
     }
     private async void post_busyScore(){
         var newBusyScore = new BusyScore{
-            Date = DateTime.Now,
+            Date = DateTime.Now, // MongoDB stores by default in UTC
             Score = input_busyScore,
             Spot_id = spot._id,
             User_id = 0,
