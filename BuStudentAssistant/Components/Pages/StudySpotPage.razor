@@ -24,7 +24,7 @@
                 <h1 class = "title">
                 @spot.Name 
                 </h1>
-                <div>&#127775;: @getScore()/5.0</div>
+                <div>&#127775;: @getStarScore()/5.0</div>
                 <div>Address: @spot.Address</div>
             </div>
         </div>
@@ -38,6 +38,7 @@
             </form>
 
             @* ---------------- Remove after Dev ---------------- *@
+            <div>SCORE: @getBusyScore()</div>
             @DateTime.Now.Kind
             @DateTime.Now.ToUniversalTime()
             @if (spot_busyScores != null){
@@ -150,21 +151,40 @@ window.setImage = async (imageElementId, imageStream) => {
     private async void update_busyScores(){
         spot_busyScores = await dbContext.BusyScores.Find(b => b.Spot_id == spot._id).SortByDescending(b => b.Date).ToListAsync();
         var filteredResults = from score in spot_busyScores
-						where minutesElapsedSince(score.Date) < 60
+						@* where minutesElapsedSince(score.Date) < 60 *@
                         select score;
-        
+    
         StateHasChanged();
     }
-    private double getScore(){
-        var result = dbContext.Comments.Aggregate()
-            .Match(c => c.Spot_id == spot._id)
-            .Group(c => c.Spot_id, g => 
-                new {
-                    Spot_id = g.Key,
-                    AveragePrice = g.Average(p => p.Stars)
-                })
-            .ToList();
-        return Math.Round(result.Select(_ => _.AveragePrice).FirstOrDefault(), 1);
+    private double getBusyScore(){
+        try{
+            var result = dbContext.BusyScores.Aggregate()
+                .Match(b => b.Spot_id == spot._id)
+                .ToList();
+            var filteredResults = from b in result
+                            where DateTime.Now.ToUniversalTime().Subtract(b.Date).Minutes < 60
+                            select b;
+            return filteredResults.Average(b => b.Score);
+        }catch(Exception ex){
+            Console.WriteLine($"Error while retrieving busy score for {spot._id}: {ex.Message}");
+            return 0.0;
+        }
+    }
+    private double getStarScore(){
+        try{
+            var result = dbContext.Comments.Aggregate()
+                .Match(c => c.Spot_id == spot._id)
+                .Group(c => c.Spot_id, g => 
+                    new {
+                        Spot_id = g.Key,
+                        AverageStar = g.Average(p => p.Stars)
+                    })
+                .ToList();
+            return Math.Round(result.Select(_ => _.AverageStar).FirstOrDefault(), 1);
+        }catch(Exception ex){
+            Console.WriteLine($"Error while retrieving star score for {spot._id}: {ex.Message}");
+            return 0;
+        }
     }
 
     public void updateInputStars(int star)
