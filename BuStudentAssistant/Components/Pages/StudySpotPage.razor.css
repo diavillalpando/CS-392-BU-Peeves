@@ -86,6 +86,15 @@
     margin-bottom: 0.5em;
 }
 
+.fa-user{
+    color: rgb(0, 186, 0);
+}
+.fa-user-friends{
+    color: rgb(246, 191, 12);
+}
+.fa-users{
+    color: rgb(255, 49, 30);
+}
 
 .stars {
     --s:2em;
@@ -150,3 +159,5 @@
   input:nth-of-type(9):hover ~ i {--l:9}
   input:nth-of-type(10):hover ~ i {--l:10}
   /*input:nth-of-type(N):hover ~ i {--l:N}*/
+
+  
