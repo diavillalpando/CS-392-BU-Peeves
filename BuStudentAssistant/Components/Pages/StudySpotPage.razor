@@ -25,6 +25,7 @@
                 @spot.Name 
                 </h1>
                 <div>&#127775;: @getStarScore()/5.0</div>
+                <div>Busy: <i class="@getBusyScoreIcon()"></i></div>
                 <div>Address: @spot.Address</div>
             </div>
         </div>
@@ -38,9 +39,9 @@
             </form>
 
             @* ---------------- Remove after Dev ---------------- *@
-            <div>SCORE: @getBusyScore()</div>
+            <div>SCORE: @getBusyScore() </div>
             @DateTime.Now.Kind
-            @DateTime.Now.ToUniversalTime()
+            @DateTime.Now.ToLocalTime()
             @if (spot_busyScores != null){
                 <ul>
                     @foreach(var b in spot_busyScores){
@@ -141,8 +142,7 @@ window.setImage = async (imageElementId, imageStream) => {
     public int input_busyScore;
 
     private double minutesElapsedSince(DateTime d){
-
-        return DateTime.Now.ToUniversalTime().Subtract(d).Minutes;
+        return DateTime.Now.ToUniversalTime().Subtract(d).TotalMinutes;
     }
     private async void update_comments(){
         spot_comments = await dbContext.Comments.Find(c => c.Spot_id == spot._id).SortByDescending(c => c.Date).ToListAsync();
@@ -150,9 +150,6 @@ window.setImage = async (imageElementId, imageStream) => {
     }
     private async void update_busyScores(){
         spot_busyScores = await dbContext.BusyScores.Find(b => b.Spot_id == spot._id).SortByDescending(b => b.Date).ToListAsync();
-        var filteredResults = from score in spot_busyScores
-						@* where minutesElapsedSince(score.Date) < 60 *@
-                        select score;
     
         StateHasChanged();
     }
@@ -161,14 +158,29 @@ window.setImage = async (imageElementId, imageStream) => {
             var result = dbContext.BusyScores.Aggregate()
                 .Match(b => b.Spot_id == spot._id)
                 .ToList();
+            if (result == null || result.Count == 0){
+                return 0.0;
+            }
             var filteredResults = from b in result
-                            where DateTime.Now.ToUniversalTime().Subtract(b.Date).Minutes < 60
+                            where DateTime.Now.ToUniversalTime().Subtract(b.Date).TotalMinutes < 60 // <- Need to fix this
                             select b;
             return filteredResults.Average(b => b.Score);
         }catch(Exception ex){
             Console.WriteLine($"Error while retrieving busy score for {spot._id}: {ex.Message}");
             return 0.0;
         }
+    }
+
+    private string getBusyScoreIcon(){
+        double score = getBusyScore();
+        if (score < 1.666){
+            return "fas fa-user";
+        }else if (score < 2.333){
+            return "fas fa-user-friends";
+        }else{
+            return "fas fa-users";
+        }
+
     }
     private double getStarScore(){
         try{
