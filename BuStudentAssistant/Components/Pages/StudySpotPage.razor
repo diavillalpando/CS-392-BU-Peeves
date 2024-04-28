@@ -31,25 +31,18 @@
         </div>
         
         <div id = "information">
-
-            <form method = "post" @onsubmit="post_busyScore" @formname="busyScore-form">
-                <button type="submit" @onclick="() => input_busyScore = 1"> <i class="fas fa-user"></i></button>
-                <button type="submit" @onclick="() => input_busyScore = 2"> <i class="fas fa-user-friends"></i></button>
-                <button type="submit" @onclick="() => input_busyScore = 3"> <i class="fas fa-users"></i></button>
-            </form>
-
-            @* ---------------- Remove after Dev ---------------- *@
-            <div>SCORE: @getBusyScore() </div>
-            @DateTime.Now.Kind
-            @DateTime.Now.ToLocalTime()
-            @if (spot_busyScores != null){
-                <ul>
-                    @foreach(var b in spot_busyScores){
-                        <li>@b.Score, @b.Date.ToLocalTime() (@minutesElapsedSince(@b.Date))</li>
-                    }
-                </ul>
-            }
-            @* ---------------- End of remove ---------------- *@
+            <div id = "busyScore_input_box">
+                @if(!busyScore_submitted){
+                    <h5>How busy is it at @spot.Name?</h5>
+                    <form method = "post" @onsubmit="post_busyScore" @formname="busyScore-form">
+                        <button type="submit" @onclick="() => input_busyScore = 1"> <i class="fas fa-user"></i></button>
+                        <button type="submit" @onclick="() => input_busyScore = 2"> <i class="fas fa-user-friends"></i></button>
+                        <button type="submit" @onclick="() => input_busyScore = 3"> <i class="fas fa-users"></i></button>
+                    </form>
+                }else{
+                    <div>Thank you for your feedback! :)</div>
+                }
+            </div>
             
             
             <p>@spot.Description</p>
@@ -62,13 +55,7 @@
                 <ul id = "comment_box">
                     <form method="post" @onsubmit="post_comment" @formname="comment-form">
                         <input id = "comment_input_text" type="text" @bind-value="input_text">
-                        @* <button class="btn btn-primary" @onclick="post_comment">Comment</button> *@
-
                         <input type="submit" value="Comment">
-
-                        @* <label for="vol">Volume (between 0 and 50):</label>
-                        <input type="range" id="vol" name="vol" min="0" max="5"> *@
-
                         <div class="stars">
                             <input type="radio" name="rating4" value="1" @onchange="@(() => updateInputStars(1))"/>
                             <input type="radio" name="rating4" value="2" @onchange="@(() => updateInputStars(2))"/>
@@ -134,11 +121,10 @@ window.setImage = async (imageElementId, imageStream) => {
     List<BusyScore> spot_busyScores;
     Sy.GoogleMaps gmaps;
     bool post_first_render = false;
-
+    bool busyScore_submitted = false;
     public string? input_text;
     public int input_stars;
 
-    public double spot_busyScore;
     public int input_busyScore;
 
     private double minutesElapsedSince(DateTime d){
@@ -146,11 +132,6 @@ window.setImage = async (imageElementId, imageStream) => {
     }
     private async void update_comments(){
         spot_comments = await dbContext.Comments.Find(c => c.Spot_id == spot._id).SortByDescending(c => c.Date).ToListAsync();
-        StateHasChanged();
-    }
-    private async void update_busyScores(){
-        spot_busyScores = await dbContext.BusyScores.Find(b => b.Spot_id == spot._id).SortByDescending(b => b.Date).ToListAsync();
-    
         StateHasChanged();
     }
     private double getBusyScore(){
@@ -219,6 +200,7 @@ window.setImage = async (imageElementId, imageStream) => {
 
     }
     private async void post_busyScore(){
+        busyScore_submitted = true;
         var newBusyScore = new BusyScore{
             Date = DateTime.Now, // MongoDB stores by default in UTC
             Score = input_busyScore,
@@ -226,9 +208,8 @@ window.setImage = async (imageElementId, imageStream) => {
             User_id = 0,
         };
         await dbContext.BusyScores.InsertOneAsync(newBusyScore);
-        update_busyScores();
         Console.WriteLine($"Uploaded busyScore '{newBusyScore._id}' to '{spot._id}'");
-
+        
     }
     protected override async Task OnInitializedAsync() // Runs when the page loads
     {
@@ -236,7 +217,6 @@ window.setImage = async (imageElementId, imageStream) => {
         gmaps = new Sy.GoogleMaps(Configuration, JS, Http, ClientFactory);
         spot = await dbContext.StudySpots.Find(s => s._id.ToString() == studySpot_id).FirstAsync();
         update_comments();
-        update_busyScores();
         
 
     }

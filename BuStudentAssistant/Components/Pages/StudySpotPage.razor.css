@@ -86,6 +86,43 @@
     margin-bottom: 0.5em;
 }
 
+#busyScore_input_box {
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 1em;
+    margin-right: 2em;
+    color: white;
+}
+
+#busyScore_input_box form{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#busyScore_input_box form button{
+    display: inline-flex;
+    margin-left: 0.5em; 
+    margin-right: 0.5em; 
+    font-size: 1.5em;
+    width: 1.8em;
+    justify-content: center;
+    align-content: flex-end;
+    background-color: #ffffff5f;
+    border-color: transparent;
+    border-radius: 5px;
+    text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.8); 
+    
+}
+
+#busyScore_input_box form button:hover{
+    transition: 0.5s;
+    background-color: #ffffff95;
+    text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.9); 
+}
+
 .fa-user{
     color: rgb(0, 186, 0);
 }
