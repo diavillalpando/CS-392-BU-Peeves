@@ -17,62 +17,75 @@
 @inject IConfiguration Configuration
 @rendermode InteractiveServer
 
-<PageTitle>Email Assistant</PageTitle>
+<PageTitle>Email Assistant</PageTitle> 
 
 <h3>Email Assistant</h3>
 <h4>@email</h4>
 
-@if (loading)
-{
-    <p class="loading-message">Loading...</p>
-}
-else if (error)
-{
-    <p class="error-message">Error occurred while loading emails. @errorMessage</p>
-}
-else if (messageSummaries != null)
-{
-    <ul class="message-list">
-        @foreach (var message in messageOnPage)
+<div class="container">
+    <div class="email-list">
+        @if (loading)
         {
-            <li>
-                <div class="message-container">
-                    @if (message!= null)
-                    {
-                        <strong class="message-detail">From: </strong> @message.From <br />
-                        <div></div>
-                        <strong class="message-detail">To: </strong> @message.To <br />
-                        <div></div>
-                        <strong class="message-detail">Subject: </strong> @message.Subject <br />
-                        <div></div>
-                        <strong class="message-detail">Summary: </strong> @(message.SummarizedBody.ToString()) <br />
-                        <div></div>
-                        <strong class="message-detail">Generated Reply: </strong> @message.GeneratedReply <br />
-                        <div></div>
-                        <input type="text" @bind="userInput" @oninput="UpdateUserInput" />
-                        <button class="generate-reply-button" @onclick="(() => Submit(message))">Generate Reply</button>
-                        <button class="reply-button" @onclick="(e) => SendEmail(message.From ,message.To, message.Subject, message.GeneratedReply)">Send Reply</button> <br />
-                        @errorMessage
-                    }
-                    else
-                    {
-                        <div class="no-content-message">No content available for this message.</div>
-                    }
-                </div>
-            </li>
+            <p class="loading-message">Loading...</p>
         }
-    </ul>
-     
-}
-else
-{
-    <p class="no-emails-message">No emails found.</p>
-    <br />
-}
-    <button @onclick="PreviousPage">Previous</button>
-    <span> <strong>Page: </strong> @(pageIndex.ToString())</span>
-    <button @onclick="NextPage">Next</button>
-
+        else if (error)
+        {
+            <p class="error-message">Error occurred while loading emails. @errorMessage</p>
+        }
+        else if (messageSummaries != null)
+        {
+            <ul class="message-list">
+                @foreach (var message in messageOnPage)
+                {
+                    <li class="email-item" @onclick="@(e => ToggleEmailDetails(message))">
+                        <div class="message-container">
+                            @if (message != null)
+                            {
+                                <strong class="message-detail">From: </strong> @message.From <br />
+                                <strong class="message-detail">To: </strong> @message.To <br />
+                                <strong class="message-detail">Subject: </strong> @message.Subject
+                            }
+                            else
+                            {
+                                <div class="no-content-message">No content available for this message.</div>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="no-emails-message">No emails found.</p>
+            <br />
+        }
+    </div>
+    <div class="email-details">
+        <div class="email-content">
+            <!-- Details of the selected email will be displayed here -->
+            @if (selectedEmail != null)
+            {
+                <strong>From: </strong> @selectedEmail.From <br />
+                <strong>To: </strong> @selectedEmail.To <br />
+                <strong>Subject: </strong> @selectedEmail.Subject <br />
+                <strong>Summary: </strong> @(selectedEmail.SummarizedBody.ToString())<br />
+                <strong>Generated Reply: </strong> @selectedEmail.GeneratedReply <br />
+                <div></div>
+                <input class="user-input" type="text" @bind="userInput" />
+                <button class="generate-reply-button" @onclick="@(e => Submit(selectedEmail))">Generate Reply</button>
+                <div></div>
+                <button class="reply-button" @onclick="(e) => SendEmail(selectedEmail.From, selectedEmail.To, selectedEmail.Subject, selectedEmail.GeneratedReply)">Reply</button> <br />
+            }
+            else
+            {
+                <div>No email selected.</div>
+            }
+        </div>
+    </div>
+</div>
+<button @onclick="PreviousPage">Previous</button>
+<span> <strong>Page: </strong> @(pageIndex.ToString())</span>
+<button @onclick="NextPage">Next</button>
 
 
 @code {
@@ -90,6 +103,7 @@ else
     private string errorMessage= "";
     private string email;
     private string userInput;
+    private EmailMessage selectedEmail;
 
     private void Submit(EmailMessage email)
     {
@@ -303,7 +317,13 @@ else
         }
 
     }
-
+    private void ToggleEmailDetails(EmailMessage email)
+    {
+        // Set selectedEmail to the clicked email
+        selectedEmail = email;
+        Console.WriteLine("Selected email: " + email.Subject);
+        StateHasChanged();
+    }
     // sending emails
     private void SendEmail(string from, string to, string subject, string body)
     {

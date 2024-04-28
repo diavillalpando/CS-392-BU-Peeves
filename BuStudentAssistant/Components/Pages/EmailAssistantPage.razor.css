@@ -37,7 +37,6 @@
     margin-bottom: 10px;
 }
 
-
 /* Styles for message details */
 .message-detail {
     font-weight: bold;
@@ -55,7 +54,6 @@
 .reply-button:hover {
     background-color: #9c1a1a; /* Darker red color on hover */
 }
-
 
 /* Styles for user input */
 .user-input {
@@ -77,6 +75,7 @@
 .generate-reply-button:hover {
     background-color: #9c1a1a; /* Darker red color on hover */
 }
+
 /* Styles for user input message */
 .user-input-message {
     color: #555; /* Dark gray color */
@@ -92,4 +91,36 @@
 .no-emails-message {
     font-style: italic;
     color: #555; /* Dark gray color */
+}
+
+/* Styles for container */
+.container {
+    display: flex; /* Use flexbox layout */
+}
+
+/* Styles for email list */
+.email-list {
+    flex: 1; /* Take up remaining space */
+    border-right: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+/* Styles for email details */
+.email-details {
+    flex: 1; /* Take up remaining space */
+    padding: 10px;
+    overflow-y: auto;
+    background-color: white;
+}
+
+/* Styles for expanded email details content */
+.email-content {
+    /* Remove padding */
+    padding: 0;
+}
+
+/* Styles for showing expanded email details */
+.email-item.active .email-content {
+    display: block;
 }
