@@ -35,15 +35,12 @@ else
                 <li><a href = "/StudySpotYelp/@spot._id">
                     <img src = "@spot.Image">
                     <div>
-                        
                         <div><b>@spot.Name</b> </div>
-                        <div>@getScore(@spot._id)&#127775;</div>
                         <div>@spot.Address</div>
+                        <div>@getStarScore(@spot._id)&#127775;</div>
+                        <div><i class="@getBusyScoreIcon(@spot._id)"></i> </div>
                     </div>
-                    
-
                 </a></li>
-                
             }
 
     </ul>
@@ -92,16 +89,50 @@ else
     private int _mapHeight;
     private int _mapWidth;
 
-    private double getScore(MongoDB.Bson.ObjectId spot_id){
-        var result = dbContext.Comments.Aggregate()
-            .Match(c => c.Spot_id == spot_id)
-            .Group(c => c.Spot_id, g => 
-                new {
-                    Spot_id = g.Key,
-                    AveragePrice = g.Average(p => p.Stars)
-                })
-            .ToList();
-        return Math.Round(result.Select(_ => _.AveragePrice).FirstOrDefault(), 1);
+    private double getBusyScore(MongoDB.Bson.ObjectId spot_id){
+        try{
+            var result = dbContext.BusyScores.Aggregate()
+                .Match(b => b.Spot_id == spot_id)
+                .ToList();
+            if (result == null || result.Count == 0){
+                return 0.0;
+            }
+            var filteredResults = from b in result
+                            where DateTime.Now.ToUniversalTime().Subtract(b.Date).TotalMinutes < 60 // <- Need to fix this
+                            select b;
+            return filteredResults.Average(b => b.Score);
+        }catch(Exception ex){
+            Console.WriteLine($"Error while retrieving busy score for {spot_id}: {ex.Message}");
+            return 0.0;
+        }
+    }
+
+    private string getBusyScoreIcon(MongoDB.Bson.ObjectId spot_id){
+        double score = getBusyScore(spot_id);
+        if (score < 1.666){
+            return "fas fa-user";
+        }else if (score < 2.333){
+            return "fas fa-user-friends";
+        }else{
+            return "fas fa-users";
+        }
+
+    }
+    private double getStarScore(MongoDB.Bson.ObjectId spot_id){
+        try{
+            var result = dbContext.Comments.Aggregate()
+                .Match(c => c.Spot_id == spot_id)
+                .Group(c => c.Spot_id, g => 
+                    new {
+                        Spot_id = g.Key,
+                        AverageStar = g.Average(p => p.Stars)
+                    })
+                .ToList();
+            return Math.Round(result.Select(_ => _.AverageStar).FirstOrDefault(), 1);
+        }catch(Exception ex){
+            Console.WriteLine($"Error while retrieving star score for {spot_id}: {ex.Message}");
+            return 0;
+        }
     }
 
     private double getReviewNum(MongoDB.Bson.ObjectId spot_id){
