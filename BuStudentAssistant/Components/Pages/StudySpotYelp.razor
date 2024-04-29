@@ -11,6 +11,7 @@
 @inject IHttpClientFactory ClientFactory
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 @inject IMongoDbContext dbContext
 @using Radzen
 @using Sy = StudySpotYelpNameSpace
@@ -53,8 +54,12 @@ else
         <RadzenGoogleMap ApiKey=@_googleMapsApiKey @ref=map style="height: 100%;" Options=@(new Dictionary<string, object> { { "disableDoubleClickZoom", true } })
                     Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 42.35060811767134, Lng = -71.10534552683325 }) MapClick=@OnMapClick MarkerClick=@OnMarkerClick>
                 <Markers>
-                    <RadzenGoogleMapMarker Title="London" Label="London" Position=@(new GoogleMapPosition() { Lat = 51.5074, Lng = 0.1278 }) />
-                    <RadzenGoogleMapMarker Title="Paris " Label="Paris" Position=@(new GoogleMapPosition() { Lat = 48.8566, Lng = 2.3522 }) />
+                    @if (study_spots != null){
+                        @foreach(StudySpot spot in study_spots){
+                            <RadzenGoogleMapMarker Title=@spot._id.ToString() Label="@spot.Name" Position=@(new GoogleMapPosition() { Lat = @spot.Lat, Lng = @spot.Lng }) />
+                        }
+                    }
+                    
                 </Markers>
             </RadzenGoogleMap>
     }
@@ -69,7 +74,7 @@ else
     @* Configuration for the map *@
     RadzenGoogleMap map;
     private string _googleMapsApiKey = "";
-	private byte zoom = 16;
+	private byte zoom = 17;
 
     void OnMapClick(GoogleMapClickEventArgs args)
     {
@@ -78,17 +83,7 @@ else
 
     async Task OnMarkerClick(RadzenGoogleMapMarker marker)
     {
-        var message = $"Custom information about <b>{marker.Title}</b>";
-
-        var code = $@"
-                    var map = Radzen['{map.UniqueID}'].instance;
-                    var marker = map.markers.find(m => m.title == '{marker.Title}');
-                    if(window.infoWindow) {{window.infoWindow.close();}}
-                    window.infoWindow = new google.maps.InfoWindow({{content: '{message}'}});
-                    setTimeout(() => window.infoWindow.open(map, marker), 200);
-                    ";
-
-        await JS.InvokeVoidAsync("eval", code);
+        NavigationManager.NavigateTo($"/studySpotYelp/{marker.Title}",forceLoad: true);
     }
 
     private double getBusyScore(MongoDB.Bson.ObjectId spot_id){
@@ -146,6 +141,7 @@ else
         _googleMapsApiKey = Configuration["GMapsApiKey"];
 
         study_spots = await dbContext.StudySpots.Find(s => s._id != null).SortBy(s => s._id).ToListAsync();
+
         
         StateHasChanged();
     }
