@@ -10,56 +10,62 @@
 @using System.Runtime.Serialization;
 @using System.Linq;
 
-<h3>MBTA Vehicle Info</h3>
+<style>
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        height: 100vh;
+        padding-top: calc(100vh / 3); /* Set the padding top to 1/3 of the viewport height */
+    }
 
-<form @onsubmit="GetVehicleInfo">
-    <label for="Direction">Choose a Direction:</label>
-    <select name="Direction" id="Direction" @bind="SelectedDirection">
-        <option value="Inbound">Inbound</option>
-        <option value="Outbound">Outbound</option>
-    </select>
-    <br />
+    .form-container {
+        text-align: center;
+        margin-top: 20px; /* Add margin to the top of the form container */
+    }
+</style>
 
-    <label for="Stops">Choose a stop:</label>
-    <select name="Stops" id="Stops" @bind="SelectedStop">
-        <option value="Government Center">Government Center</option>
-        <option value="Park Street">Park Street</option>
-        <option value="Boylston">Boylston</option>
-        <option value="Arlington">Arlington</option>
-        <option value="Copley">Copley</option>
-        <option value="Hynes Convention Center">Hynes Convention Center</option>
-        <option value="Kenmore">Kenmore</option>
-        <option value="Blandford Street">Blandford Street</option>
-        <option value="Boston University East">Boston University East</option>
-        <option value="Boston University Central">Boston University Central</option>
-        <option value="Amory Street">Amory Street</option>
-        <option value="Babcock Street">Babcock Street</option>
-        <option value="Packard's Corner">Packard's Corner</option>
-        <option value="Harvard Avenue">Harvard Avenue</option>
-        <option value="Griggs Street">Griggs Street</option>
-        <option value="Allston Street">Allston Street</option>
-        <option value="Warren Street">Warren Street</option>
-        <option value="Washington Street">Washington Street</option>
-        <option value="Sutherland Road">Sutherland Road</option>
-        <option value="Chiswick Road">Chiswick Road</option>
-        <option value="Chestnut Hill Avenue">Chestnut Hill Avenue</option>
-        <option value="South Street">South Street</option>
-        <option value="Boston College">Boston College</option>
-    </select>
+<div class="container">
+    <div class="form-container">
+        <h3>MBTA Vehicle Info</h3>
 
-    <button type="submit">Get Vehicle Details</button>
-</form>
+        <form @onsubmit="GetVehicleInfo">
+            <label for="Direction">Choose a Direction:</label>
+            <select name="Direction" id="Direction" @bind="SelectedDirection">
+                <option value="Inbound">Inbound</option>
+                <option value="Outbound">Outbound</option>
+            </select>
+            <br />
 
-@if (VehicleInfo != null)
-{
-    <h4>Arrival Time: @VehicleInfo.ArrivalTime</h4>
-    <h4>Status: @VehicleInfo.Status</h4>
-}
+            <label for="Stops">Choose a stop:</label>
+            <select name="Stops" id="Stops" @bind="SelectedStop">
+                @foreach (var stop in FilteredStops)
+                {
+                    <option value="@stop">@stop</option>
+                }
+            </select>
+
+            <br />
+            <button type="submit">Get Vehicle Details</button>
+        </form>
+
+        <input type="checkbox" @bind="HideNonBUStops" /> Hide Off Campus Stops
+
+        @if (VehicleInfo != null)
+        {
+            <div style="margin-top: 20px;">
+                <h4>Arrival Time: @VehicleInfo.ArrivalTime</h4>
+                <h4>Status: @VehicleInfo.Status</h4>
+            </div>
+        }
+    </div>
+</div>
 
 @code {
     private string SelectedDirection { get; set; } = "0";
     private string SelectedStop { get; set; } = "0";
     private VehicleInfoResponse VehicleInfo { get; set; }
+    private bool HideNonBUStops { get; set; }
 
     private async Task GetVehicleInfo()
     {
@@ -123,4 +129,16 @@
         [DataMember(Name = "arrival_time")]
         public string ArrivalTime { get; set; }
     }
+
+    private List<string> AllStops = new List<string>
+    {
+        "Allston Street", "Amory Street", "Arlington", "Babcock Street", "Blandford Street",
+        "Boylston", "Boston College", "Boston University Central", "Boston University East",
+        "Chestnut Hill Avenue", "Chiswick Road", "Copley", "Government Center", "Griggs Street",
+        "Harvard Avenue", "Hynes Convention Center", "Kenmore", "Packard's Corner", "Park Street",
+        "South Street", "Sutherland Road", "Warren Street", "Washington Street"
+    };
+
+    private IEnumerable<string> FilteredStops =>
+        HideNonBUStops ? AllStops.Where(stop => stop.Contains("Boston University") || stop == "Amory Street" || stop == "Babcock Street" || stop == "Kenmore" || stop == "Blandford Street") : AllStops;
 }
