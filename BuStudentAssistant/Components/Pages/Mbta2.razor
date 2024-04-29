@@ -6,7 +6,7 @@
 @using System.Runtime.Serialization.Json;
 @using System.Text.Json.Serialization;
 @using System.Threading.Tasks;
-@using System.Linq
+@using System.Linq;
 
 @page "/Mbta2"
 @rendermode InteractiveServer
@@ -14,113 +14,20 @@
 <h3>MBTA Vehicle Info</h3>
 
 <form @onsubmit="GetVehicleInfo">
-    <label for="Direction">Choose a Direction:</label>
-    <select name="Direction" id="Direction" @bind="SelectedDirection">
-        <option value="Inbound">Inbound</option>
-        <option value="Outbound">Outbound</option>
-    </select>
-    <br />
     <label for="Stops">Choose a stop:</label>
     <select name="Stops" id="Stops" @bind="SelectedStop">
-        <option value="Water St @@ Watertown Yard">Water St @@ Watertown Yard</option>
-        <option value="Galen St @@ Boyd St">Galen St @@ Boyd St</option>
-        <option value="Centre St @@ Pearl St">Centre St @@ Pearl St</option>
-        <option value="Washington St @@ Bacon St">Washington St @@ Bacon St</option>
-        <option value="400 Centre St - East">400 Centre St - East</option>
-        <option value="Park St @@ Elmwood St">Park St @@ Elmwood St</option>
-        <option value="Tremont St opp Hibbard Rd">Tremont St opp Hibbard Rd</option>
-        <option value="Tremont St @@ Waverley Ave">Tremont St @@ Waverley Ave</option>
-        <option value="Tremont St @@ Pembroke St">Tremont St @@ Pembroke St</option>
-        <option value="Tremont St @@ Cufflin St">Tremont St @@ Cufflin St</option>
-        <option value="Tremont St @@ Tremont Pl">Tremont St @@ Tremont Pl</option>
-        <option value="Tremont St @@ Washington St">Tremont St @@ Washington St</option>
-        <option value="Washington St @@ Breck Ave">Washington St @@ Breck Ave</option>
-        <option value="Washington St @@ Langley Rd">Washington St @@ Langley Rd</option>
-        <option value="Washington St @@ Lake St">Washington St @@ Lake St</option>
-        <option value="Washington St @@ Foster St">Washington St @@ Foster St</option>
-        <option value="Washington St @@ Chestnut Hill Ave">Washington St @@ Chestnut Hill Ave</option>
-        <option value="Washington St opp Waldo Terr">Washington St opp Waldo Terr</option>
-        <option value="Cambridge St @@ Washington St">Cambridge St @@ Washington St</option>
-        <option value="Cambridge St opp Elko St">Cambridge St opp Elko St</option>
-        <option value="Cambridge St opp Dustin St">Cambridge St opp Dustin St</option>
-        <option value="Cambridge St @@ Gordon St">Cambridge St @@ Gordon St</option>
-        <option value="Cambridge St @@ Barrows St">Cambridge St @@ Barrows St</option>
-        <option value="Brighton Ave @@ Cambridge St">Brighton Ave @@ Cambridge St</option>
-        <option value="Brighton Ave @@ Allston St">Brighton Ave @@ Allston St</option>
-        <option value="Brighton Ave @@ Harvard Ave">Brighton Ave @@ Harvard Ave</option>
-        <option value="Brighton Ave @@ Commonwealth Ave">Brighton Ave @@ Commonwealth Ave</option>
-        <option value="Commonwealth Ave @@ Babcock St">Commonwealth Ave @@ Babcock St</option>
-        <option value="Commonwealth Ave @@ Pleasant St">Commonwealth Ave @@ Pleasant St</option>
-        <option value="Commonwealth Ave @@ Carlton St">Commonwealth Ave @@ Carlton St</option>
-        <option value="Commonwealth Ave @@ St Mary's St">Commonwealth Ave @@ St Mary's St</option>
-        <option value="Commonwealth Ave @@ Hinsdale St">Commonwealth Ave @@ Hinsdale St</option>
-        <option value="Commonwealth Ave @@ Blandford St">Commonwealth Ave @@ Blandford St</option>
-        <option value="Kenmore">Kenmore</option>
-        <option value="Commonwealth Ave @@ Kenmore St">Commonwealth Ave @@ Kenmore St</option>
-        <option value="Boylston St @@ Prudential Center">Boylston St @@ Prudential Center</option>
-        <option value="Boylston St @@ Dartmouth St">Boylston St @@ Dartmouth St</option>
-        <option value="Boylston St @@ Clarendon St">Boylston St @@ Clarendon St</option>
-        <option value="Boylston St @@ Berkeley St">Boylston St @@ Berkeley St</option>
-        <option value="Chauncy St @@ Summer St">Chauncy St @@ Summer St</option>
-        <option value="Milk St @@ Devonshire St">Milk St @@ Devonshire St</option>
-        <option value="Pearl St @@ Congress St">Pearl St @@ Congress St</option>
-        <option value="Congress St @@ State St">Congress St @@ State St</option>
-        <option value="Congress St @@ North St">Congress St @@ North St</option>
-        <option value="Congress St @@ Haymarket Sta">Congress St @@ Haymarket Sta</option>
-        <option value="State St @@ Washington Mall - State St Sta">State St @@ Washington Mall - State St Sta</option>
-        <option value="Tremont St @@ Beacon St">Tremont St @@ Beacon St</option>
-        <option value="Tremont St opp Temple Pl">Tremont St opp Temple Pl</option>
-        <option value="Tremont St @@ Boylston Station">Tremont St @@ Boylston Station</option>
-        <option value="Stuart St @@ Charles St S">Stuart St @@ Charles St S</option>
-        <option value="Saint James Ave @@ Arlington St">Saint James Ave @@ Arlington St</option>
-        <option value="Saint James Ave @@ Clarendon St">Saint James Ave @@ Clarendon St</option>
-        <option value="Saint James Ave @@ Dartmouth St">Saint James Ave @@ Dartmouth St</option>
-        <option value="Belvidere St @@ Huntington Ave">Belvidere St @@ Huntington Ave</option>
-        <option value="Dalton St @@ Belvidere St">Dalton St @@ Belvidere St</option>
-        <option value="Boylston St @@ Massachusetts Ave">Boylston St @@ Massachusetts Ave</option>
-        <option value="Massachusetts Ave @@ Newbury St">Massachusetts Ave @@ Newbury St</option>
-        <option value="Beacon St @@ Raleigh St">Beacon St @@ Raleigh St</option>
-        <option value="Commonwealth Ave @@ Silber Way">Commonwealth Ave @@ Silber Way</option>
-        <option value="Commonwealth Ave @@ Granby St">Commonwealth Ave @@ Granby St</option>
-        <option value="Commonwealth Ave @@ St Mary's St">Commonwealth Ave @@ St Mary's St</option>
-        <option value="Commonwealth Ave @@ University Rd">Commonwealth Ave @@ University Rd</option>
-        <option value="Ave Louis Pasteur @@ Longwood Ave">Ave Louis Pasteur @@ Longwood Ave</option>
-        <option value="Ave Louis Pasteur @@ The Fenway">Ave Louis Pasteur @@ The Fenway</option>
-        <option value="Park Dr @@ Fenway Station">Park Dr @@ Fenway Station</option>
-        <option value="Park Dr @@ Beacon St">Park Dr @@ Beacon St</option>
-        <option value="Mountfort St @@ Carlton St">Mountfort St @@ Carlton St</option>
-        <option value="Commonwealth Ave @@ University Rd">Commonwealth Ave @@ University Rd</option>
-        <option value="Commonwealth Ave @@ Buick St">Commonwealth Ave @@ Buick St</option>
-        <option value="Commonwealth Ave @@ Babcock St">Commonwealth Ave @@ Babcock St</option>
-        <option value="1079 Commonwealth Ave">1079 Commonwealth Ave</option>
-        <option value="Brighton Ave @@ Malvern St">Brighton Ave @@ Malvern St</option>
-        <option value="Brighton Ave @@ Linden St">Brighton Ave @@ Linden St</option>
-        <option value="Brighton Ave opp Quint Ave">Brighton Ave opp Quint Ave</option>
-        <option value="Cambridge St @@ N Beacon St">Cambridge St @@ N Beacon St</option>
-        <option value="Cambridge St @@ Saunders St">Cambridge St @@ Saunders St</option>
-        <option value="Cambridge St @@ Dustin St">Cambridge St @@ Dustin St</option>
-        <option value="Cambridge St @@ Sparhawk St">Cambridge St @@ Sparhawk St</option>
-        <option value="Cambridge St @@ Elko St">Cambridge St @@ Elko St</option>
-        <option value="Washington St @@ Waldo Terr">Washington St @@ Waldo Terr</option>
-        <option value="Washington St @@ Market St">Washington St @@ Market St</option>
-        <option value="Washington St @@ Foster St">Washington St @@ Foster St</option>
-        <option value="Washington St @@ Brock St">Washington St @@ Brock St</option>
-        <option value="Washington St @@ Oak Square Ave">Washington St @@ Oak Square Ave</option>
-        <option value="Washington St @@ Oak Sq">Washington St @@ Oak Sq</option>
-        <option value="Tremont St @@ Washington St">Tremont St @@ Washington St</option>
-        <option value="Tremont St opp Tremont Pl">Tremont St opp Tremont Pl</option>
-        <option value="Tremont St opp Cufflin St">Tremont St opp Cufflin St</option>
-        <option value="Tremont St @@ Whittemore Rd">Tremont St @@ Whittemore Rd</option>
-        <option value="Tremont St @@ Waverley Ave">Tremont St @@ Waverley Ave</option>
-        <option value="Tremont St @@ Hibbard Rd">Tremont St @@ Hibbard Rd</option>
-        <option value="Park St @@ Tremont St">Park St @@ Tremont St</option>
-        <option value="Centre St @@ Jefferson St">Centre St @@ Jefferson St</option>
-        <option value="Galen St @@ Maple St">Galen St @@ Maple St</option>
-        <option value="Galen St @@ Water St">Galen St @@ Water St</option>
+        @foreach (var stop in FilteredStops.OrderBy(s => s))
+        {
+            <option value="@stop">@stop</option>
+        }
     </select>
 
     <button type="submit">Get Vehicle Details</button>
 </form>
+
+<label>
+    <input type="checkbox" @bind="FilterOffCampusStops" /> Hide Off-campus Stops
+</label>
 
 @{
     string imagePath = "";
@@ -149,10 +56,11 @@
 {
     <img src="images/@imagePath" alt="Crowdedness Image" />
 }
+
 @code {
-    private string SelectedDirection { get; set; } = "0";
-    private string SelectedStop { get; set; } = "0";
+    private string SelectedStop { get; set; } = "Water St @@ Watertown Yard";
     private VehicleInfoResponse VehicleInfo { get; set; }
+    private bool FilterOffCampusStops { get; set; }
 
     private async Task GetVehicleInfo()
     {
@@ -160,9 +68,8 @@
         {
             var apiKey = "5e809ee23cfb47d9ae73f773da5e4d8e";
             var baseUrl = "https://api-v3.mbta.com/predictions";
-            var direction = SelectedDirection == "Inbound" ? "0" : "1";
             var stop = SelectedStop.Replace(" ", "%20"); // Replace spaces with %20
-            var get_url = $"{baseUrl}?filter[route]=Green-B&filter[direction_id]={direction}&filter[stop]={stop}&sort=departure_time&api_key={apiKey}";
+            var get_url = $"{baseUrl}?filter[route]=Green-B&filter[stop]={stop}&sort=departure_time&api_key={apiKey}";
             HttpResponseMessage response = await client.GetAsync(get_url);
 
             if (response.IsSuccessStatusCode)
@@ -193,7 +100,7 @@
             }
             else
             {
-                throw new Exception($"Failed to fetch arrival time for {SelectedDirection} train at {SelectedStop}. Status code: {response.StatusCode}");
+                throw new Exception($"Failed to fetch arrival time for train at {SelectedStop}. Status code: {response.StatusCode}");
             }
         }
     }
@@ -301,4 +208,31 @@
         [DataMember(Name = "occupancy_status")]
         public string OccupancyStatus { get; set; }
     }
+
+    private List<string> AllStops = new List<string>
+    {
+        "1079 Commonwealth Ave", "400 Centre St - East", "Ave Louis Pasteur @@ Longwood Ave", "Ave Louis Pasteur @@ The Fenway",
+        "Beacon St @@ Raleigh St", "Belvidere St @@ Huntington Ave", "Boylston St @@ Clarendon St", "Boylston St @@ Dartmouth St",
+        "Boylston St @@ Massachusetts Ave", "Boylston St @@ Prudential Center", "Brighton Ave @@ Allston St", "Brighton Ave @@ Cambridge St",
+        "Brighton Ave @@ Commonwealth Ave", "Brighton Ave @@ Harvard Ave", "Brighton Ave @@ Linden St", "Brighton Ave @@ Malvern St",
+        "Brighton Ave opp Quint Ave", "Cambridge St @@ Barrows St", "Cambridge St @@ Dustin St", "Cambridge St @@ Elko St",
+        "Cambridge St @@ Gordon St", "Cambridge St @@ N Beacon St", "Cambridge St @@ Saunders St", "Cambridge St @@ Sparhawk St",
+        "Chauncy St @@ Summer St", "Centre St @@ Jefferson St", "Commonwealth Ave @@ Babcock St", "Commonwealth Ave @@ Blandford St",
+        "Commonwealth Ave @@ Buick St", "Commonwealth Ave @@ Carlton St", "Commonwealth Ave @@ Granby St", "Commonwealth Ave @@ Hinsdale St",
+        "Commonwealth Ave @@ Kenmore St", "Commonwealth Ave @@ Pleasant St", "Commonwealth Ave @@ Silber Way", "Commonwealth Ave @@ St Mary's St",
+        "Commonwealth Ave @@ University Rd", "Congress St @@ Haymarket Sta", "Congress St @@ North St", "Congress St @@ State St",
+        "Dalton St @@ Belvidere St", "Galen St @@ Boyd St", "Galen St @@ Maple St", "Galen St @@ Water St", "Kenmore",
+        "Massachusetts Ave @@ Newbury St", "Milk St @@ Devonshire St", "Mountfort St @@ Carlton St", "Park Dr @@ Beacon St",
+        "Park Dr @@ Fenway Station", "Park St @@ Elmwood St", "Park St @@ Tremont St", "Pearl St @@ Congress St", "Saint James Ave @@ Arlington St",
+        "Saint James Ave @@ Clarendon St", "Saint James Ave @@ Dartmouth St", "Stuart St @@ Charles St S", "Tremont St @@ Beacon St",
+        "Tremont St @@ Boylston Station", "Tremont St @@ Cufflin St", "Tremont St @@ Pembroke St", "Tremont St @@ Tremont Pl",
+        "Tremont St @@ Waverley Ave", "Tremont St @@ Whittemore Rd", "Tremont St @@ Washington St", "Tremont St opp Cufflin St",
+        "Tremont St opp Hibbard Rd", "Tremont St opp Temple Pl", "Tremont St opp Tremont Pl", "Washington St @@ Bacon St", "Washington St @@ Breck Ave",
+        "Washington St @@ Brock St", "Washington St @@ Chestnut Hill Ave", "Washington St @@ Foster St", "Washington St @@ Langley Rd",
+        "Washington St @@ Market St", "Washington St @@ Oak Square Ave", "Washington St @@ Oak Sq", "Washington St @@ Waldo Terr",
+        "Water St @@ Watertown Yard"
+    };
+
+    private IEnumerable<string> FilteredStops =>
+        FilterOffCampusStops ? AllStops.Where(stop => !stop.Contains("Washington St") && !stop.Contains("Tremont St") && !stop.Contains("Commonwealth Ave")) : AllStops;
 }
