@@ -2,7 +2,6 @@
 @rendermode InteractiveServer
 @using System.Text.Json
 @using System.Text.Json.Serialization
-@using Majorsoft.Blazor.Components.Maps
 @using Microsoft.Extensions.Configuration
 @using System.Drawing.Imaging
 @using BuStudentAssistant.Data
@@ -48,19 +47,11 @@ else
 }
 
 <div id = "big_map_box">
-    @if (@post_first_render && (@_mapHeight != 0 && @_mapWidth != 0)){
-        @* -------------------- Old Google maps box -------------------- *@
-        @* <GoogleMap 
-        @bind-Center="_jsMapCenter" @bind-Center:event="OnMapCenterChanged"
-        @bind-Zoom="_jsMapZoomLevel" @bind-Zoom:event="OnMapZoomLevelChanged"
-        OnMapInitialized="@(() => {})" 
-        Width="@_mapWidth"
-	    Height="@_mapHeight"
-        ApiKey="@_googleMapsApiKey" /> *@
-        @* -------------------- End -------------------- *@
+    @if (@post_first_render){
+
         @* New Radzen Google Maps box *@
         <RadzenGoogleMap ApiKey=@_googleMapsApiKey @ref=map style="height: 100%;" Options=@(new Dictionary<string, object> { { "disableDoubleClickZoom", true } })
-                    Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 42.6977, Lng = 23.3219 }) MapClick=@OnMapClick MarkerClick=@OnMarkerClick>
+                    Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 42.35060811767134, Lng = -71.10534552683325 }) MapClick=@OnMapClick MarkerClick=@OnMarkerClick>
                 <Markers>
                     <RadzenGoogleMapMarker Title="London" Label="London" Position=@(new GoogleMapPosition() { Lat = 51.5074, Lng = 0.1278 }) />
                     <RadzenGoogleMapMarker Title="Paris " Label="Paris" Position=@(new GoogleMapPosition() { Lat = 48.8566, Lng = 2.3522 }) />
@@ -68,25 +59,6 @@ else
             </RadzenGoogleMap>
     }
 </div>
-
-
-<script>
-    window.GetElementHeight = async (name) => {
-        return document.getElementById(name).offsetHeight;
-    }
-    window.GetElementWidth = async (name) => {
-        return document.getElementById(name).offsetWidth;
-    }
-</script>
-
-<script>
-    window.GetElementHeight = async (name) => {
-        return document.getElementById(name).offsetHeight;
-    }
-    window.GetElementWidth = async (name) => {
-        return document.getElementById(name).offsetWidth;
-    }
-</script>
 
 
 
@@ -97,10 +69,7 @@ else
     @* Configuration for the map *@
     RadzenGoogleMap map;
     private string _googleMapsApiKey = "";
-	private GeolocationData _jsMapCenter = new GeolocationData("Boston University");
 	private byte zoom = 16;
-    private int _mapHeight;
-    private int _mapWidth;
 
     void OnMapClick(GoogleMapClickEventArgs args)
     {
@@ -185,9 +154,6 @@ else
     {
         if (firstRender)
         {
-            _mapHeight = await JS.InvokeAsync<int>("GetElementHeight","big_map_box");
-            _mapWidth = await JS.InvokeAsync<int>("GetElementWidth","big_map_box");
-            
             post_first_render = true;
             StateHasChanged();
         }
