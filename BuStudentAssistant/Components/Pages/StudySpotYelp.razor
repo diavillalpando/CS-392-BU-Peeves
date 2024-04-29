@@ -51,12 +51,12 @@ else
     @if (@post_first_render){
 
         @* New Radzen Google Maps box *@
-        <RadzenGoogleMap ApiKey=@_googleMapsApiKey @ref=map style="height: 100%;" Options=@(new Dictionary<string, object> { { "disableDoubleClickZoom", true } })
-                    Zoom=@zoom Center=@(new GoogleMapPosition() { Lat = 42.35060811767134, Lng = -71.10534552683325 }) MapClick=@OnMapClick MarkerClick=@OnMarkerClick>
+        <RadzenGoogleMap ApiKey=@_googleMapsApiKey @ref=map style="height: 100%;" Options=@(new Dictionary<string, object> { { "disableDoubleClickZoom", true }, {"clickableIcons", false}, {"disableDefaultUI", true} })
+                    FitBoundsToMarkersOnUpdate = "true" Center=@(new GoogleMapPosition() { Lat = 42.35060811767134, Lng = -71.10534552683325 }) MapClick=@OnMapClick MarkerClick=@OnMarkerClick>
                 <Markers>
                     @if (study_spots != null){
                         @foreach(StudySpot spot in study_spots){
-                            <RadzenGoogleMapMarker Title=@spot._id.ToString() Label="@spot.Name" Position=@(new GoogleMapPosition() { Lat = @spot.Lat, Lng = @spot.Lng }) />
+                            <RadzenGoogleMapMarker Title=@spot._id.ToString() Label="@spot.Name" Icon = "@spot.Image" Position=@(new GoogleMapPosition() { Lat = @spot.Lat, Lng = @spot.Lng }) />
                         }
                     }
                     

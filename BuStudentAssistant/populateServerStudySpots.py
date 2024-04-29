@@ -50,3 +50,5 @@ addSpot("School of Theology Library","745 Commonwealth Ave., second floor","seco
 # addSpot("name","address","Description", "ImageUrl")
 # addSpot("name","address","Description", "ImageUrl")
 # addSpot("name","address","Description", "ImageUrl")
+
+
