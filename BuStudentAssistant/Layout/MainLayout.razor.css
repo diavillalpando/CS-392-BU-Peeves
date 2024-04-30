@@ -17,6 +17,7 @@ main {
     margin: 0;
     padding: 0;
     background: linear-gradient(180deg, white 50%, #E77A7A 100%);
+    background-size:cover;
     background-attachment: fixed; /* This will fix the background in place, covering the entire page */
     display: flex;
     flex-direction: column;
