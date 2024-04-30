@@ -33,11 +33,11 @@
         }
         else if (error)
         {
-            <p class="error-message">Error occurred while loading emails. @errorMessage</p>
+            <p class="instruction">Error occurred while loading emails. @errorMessage</p>
         }
         else if (messageSummaries != null)
         {
-            <h5> Select an email to view details</h5>
+            <p class="instruction"> Select an email to view details</p>
             <ul class="message-list">
                 @foreach (var message in messageOnPage)
                 {
@@ -79,7 +79,12 @@
                 <button class="generate-reply-button" @onclick="@(e => Submit(selectedEmail))">Generate Reply</button>
                 <n />
                 <button class="reply-button" @onclick="(e) => SendEmail(selectedEmail.From, selectedEmail.To, selectedEmail.Subject, selectedEmail.GeneratedReply)">Send Reply</button> <br />
-            }
+                <br />    
+                @if (errorMessage != "")
+                    {
+                        @errorMessage    
+                    }
+                }
             else
             {
                 <div>No email selected.</div>
@@ -89,7 +94,7 @@
 </div>
     <div class="page-navigator">
         <button @onclick="PreviousPage">Previous</button>
-        <span> <strong>Page: </strong> @(pageIndex.ToString())</span>
+        <span> <strong>Page: @(pageIndex.ToString()) </strong> </span>
         <button @onclick="NextPage">Next</button>
     </div> 
 
@@ -107,16 +112,15 @@
     private bool loading = true;
     private bool error = false;
     private const int MaxDisplayedMessages = 5;
-    private string api_key;
-    string googleClientId;
-    string googleClientSecret;
-    private string errorMessage= "";
-    private string email;
-    private string userInput;
-    private EmailMessage selectedEmail;
+    private string? api_key;
+    string? googleClientId;
+    string? googleClientSecret;
+    private static string errorMessage= "";
+    private string? email;
+    private string? userInput;
+    private EmailMessage? selectedEmail;
     bool post_first_render = false;
-    bool loggedIn = true;
-    UserCredential credential;
+    UserCredential? credential;
 
     private void Submit(EmailMessage email)
     {
@@ -182,15 +186,13 @@
     {
         credential.RevokeTokenAsync(CancellationToken.None).Wait(); // remove the credential
         credential = Authorize(googleClientId, googleClientSecret, scopes); // prompt for new account
-        // clear information from previous account
+                                                                            // clear information from previous account
         messages.Clear();
         messageOnPage.Clear();
         displayedMessages.Clear();
         messageSummaries.Clear();
-        // api keys
-        api_key = Configuration["ChatGptKey"];
-        googleClientId = Configuration["GmailgoogleClientId"];
-        googleClientSecret = Configuration["GmailgoogleClientSecret"];
+        pageIndex = 1;
+        selectedEmail = null;
         // load page and update
         LoadEmails();
         StateHasChanged();
@@ -206,7 +208,7 @@
         {
 
             credential = Authorize(googleClientId, googleClientSecret, scopes);
-            
+
 
             var gmailService = new GmailService(new BaseClientService.Initializer
                 {
@@ -262,27 +264,44 @@
     }
 
 
-    private static string GetMessageBody(Message message)
+    public static string GetMessageBody(Message message)
     {
-        string body = "";
+        return GetPartBody(message.Payload);
+    }
 
-        if (message.Payload.Body != null && message.Payload.Body.Data != null)
+    private static string GetPartBody(MessagePart part)
+    {
+        if (part.Body != null && !string.IsNullOrEmpty(part.Body.Data))
         {
-            body = DecodeBody(message.Payload.Body);
+            return DecodeBody(part.Body);
         }
-        else if (message.Payload.Parts != null)
+        else if (part.Parts != null)
         {
-            foreach (var part in message.Payload.Parts)
+            foreach (var childPart in part.Parts)
             {
-                if ((part.MimeType == "text/plain" || part.MimeType == "text/html") && part.Body != null && part.Body.Data != null)
+                string body = GetPartBody(childPart);
+                if (!string.IsNullOrEmpty(body))
                 {
-                    body = DecodeBody(part.Body);
-                    break;
+                    return body;
                 }
             }
         }
 
-        return body;
+        return null;
+    }
+
+    private static string parseLong(string s)
+    {
+        string[] blocks = s.Split(' ');
+        string final = "";
+        foreach (string block in blocks)
+        {
+            if (block.Length <= 15)
+            {
+                final += block;    
+            }
+        }
+        return final;
     }
 
     private static string DecodeBody(MessagePartBody body)
@@ -373,6 +392,7 @@
     {
         // Set selectedEmail to the clicked email
         selectedEmail = email;
+        errorMessage = "";
         userInput = "";
         Console.WriteLine("Selected email: " + email.Subject);
         StateHasChanged();

@@ -55,40 +55,40 @@ namespace Gmail_API
             EmailGetter emailGetter = new EmailGetter(credential);
             var messages = emailGetter.GetMessages("me");
 
-            var msg = new MimeKit.MimeMessage();
-            msg.From.Add(new MimeKit.MailboxAddress("Sender Name", "sycds460@gmail.com"));
-            msg.To.Add(new MimeKit.MailboxAddress("Recipient Name", "songyuchen2584@gmail.com"));
-            msg.Subject = "Testing email sending via Gmail API";
-            msg.Body = new MimeKit.TextPart("plain")
-            {
-                Text = "This is a test email sent via the Gmail API."
-            };
+            //var msg = new MimeKit.MimeMessage();
+            //msg.From.Add(new MimeKit.MailboxAddress("Sender Name", "sycds460@gmail.com"));
+            //msg.To.Add(new MimeKit.MailboxAddress("Recipient Name", "songyuchen2584@gmail.com"));
+            //msg.Subject = "Testing email sending via Gmail API";
+            //msg.Body = new MimeKit.TextPart("plain")
+            //{
+            //    Text = "This is a test email sent via the Gmail API."
+            //};
 
-            // Convert MimeMessage to RFC822 formatted string
-            string rfc822Message = msg.ToString();
+            //// Convert MimeMessage to RFC822 formatted string
+            //string rfc822Message = msg.ToString();
 
-            try
-            {
+            //try
+            //{
 
-                using (var gmailService = new GmailService(new BaseClientService.Initializer
-                {
-                    HttpClientInitializer = credential
-                }))
-                {
+            //    using (var gmailService = new GmailService(new BaseClientService.Initializer
+            //    {
+            //        HttpClientInitializer = credential
+            //    }))
+            //    {
 
-                    var message = new Message
-                    {
-                        Raw = Base64UrlEncode(rfc822Message)
-                    };
+            //        var message = new Message
+            //        {
+            //            Raw = Base64UrlEncode(rfc822Message)
+            //        };
 
-                    gmailService.Users.Messages.Send(message, "me").Execute();
-                    Console.WriteLine("Email sent successfully.");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
+            //        gmailService.Users.Messages.Send(message, "me").Execute();
+            //        Console.WriteLine("Email sent successfully.");
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine($"Error: {ex.Message}");
+            //}
 
             int i = 0;
             foreach (var message in messages)
@@ -110,28 +110,33 @@ namespace Gmail_API
             }
 
         }
-            private static string GetMessageBody(Message message)
+        public static string GetMessageBody(Message message)
         {
-            string body = "";
+            return GetPartBody(message.Payload);
+        }
 
-            if (message.Payload.Body != null && message.Payload.Body.Data != null)
+        private static string GetPartBody(MessagePart part)
+        {
+            if (part.Body != null && !string.IsNullOrEmpty(part.Body.Data))
             {
-                body = DecodeBody(message.Payload.Body);
+                return DecodeBody(part.Body);
             }
-            else if (message.Payload.Parts != null)
+            else if (part.Parts != null)
             {
-                foreach (var part in message.Payload.Parts)
+                foreach (var childPart in part.Parts)
                 {
-                    if (part.MimeType == "text/plain" && part.Body != null && part.Body.Data != null)
+                    string body = GetPartBody(childPart);
+                    if (!string.IsNullOrEmpty(body))
                     {
-                        body = DecodeBody(part.Body);
-                        break;
+                        return body;
                     }
                 }
             }
 
-            return body;
+            return null;
         }
+
+
 
         private static string DecodeBody(MessagePartBody body)
         {
