@@ -1,4 +1,4 @@
-import os
+.import os
 os.system("clear")
 os.system("net stop MongoDB")
 print("--- Starting MongoDB Server ---")

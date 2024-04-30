@@ -31,8 +31,8 @@
 
 /* Styles for message container */
 .message-container {
-    border: none; /* Remove border */
-    background-color: white; /* Set background color to white */
+    border-radius: 2px; /* Remove border */
+    background-color: rgb(250,250,250); /* Set background color to white */
     padding: 10px;
     margin-bottom: 10px;
 }
@@ -112,6 +112,11 @@
     padding: 10px;
     overflow-y: auto;
     background-color: white;
+    padding: 0;
+    border-radius: 2px; /* Remove border */
+    background-color: rgb(250,250,250); /* Set background color to white */
+    padding: 10px;
+    margin-bottom: 10px;
 }
 
 /* Styles for expanded email details content */
@@ -123,4 +128,23 @@
 /* Styles for showing expanded email details */
 .email-item.active .email-content {
     display: block;
+}
+
+.switch_account {
+    position: absolute;
+    margin-left: 1759px;
+    margin-top: -92px;
+    background-color: #D31E31; /* Red color */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.page-navigator 
+{
+    position: relative;
+    top: 50px;
+    bottom: auto;
+
 }

@@ -2,29 +2,32 @@
 @using Google.Apis.Gmail.v1
 @using Google.Apis.Gmail.v1.Data
 @using Google.Apis.Services
-@using Google.Apis.Util.Store;
+@using Google.Apis.Util.Store
 @using Google.Apis.Auth.OAuth2
 @using System.Threading.Tasks
 @using System.Text
-@using OpenAI.GPT3;
+@using OpenAI.GPT3
 @using OpenAI.GPT3.Interfaces;
 @using OpenAI.GPT3.Managers;
-@using OpenAI.GPT3.ObjectModels.RequestModels;
-@using OpenAI.GPT3.ObjectModels;
+@using OpenAI.GPT3.ObjectModels.RequestModels
+@using OpenAI.GPT3.ObjectModels
 @using System.Reflection.Metadata.Ecma335
-@using System.Text.Json
+@using System.Text.Json;
 @using Microsoft.Extensions.Configuration
 @inject IConfiguration Configuration
 @rendermode InteractiveServer
 
+
 <PageTitle>Email Assistant</PageTitle> 
 
 <h3>Email Assistant</h3>
-<h4>@email</h4>
+<h5>@email</h5>
+<button class="switch_account" @onclick="LogOut">Switch Accounts</button>
 
+@if (post_first_render) { //initial rendering for the page
 <div class="container">
     <div class="email-list">
-        @if (loading)
+        @if (loading) // loading for emails
         {
             <p class="loading-message">Loading...</p>
         }
@@ -34,6 +37,7 @@
         }
         else if (messageSummaries != null)
         {
+            <h5> Select an email to view details</h5>
             <ul class="message-list">
                 @foreach (var message in messageOnPage)
                 {
@@ -73,8 +77,8 @@
                 <div></div>
                 <input class="user-input" type="text" @bind="userInput" />
                 <button class="generate-reply-button" @onclick="@(e => Submit(selectedEmail))">Generate Reply</button>
-                <div></div>
-                <button class="reply-button" @onclick="(e) => SendEmail(selectedEmail.From, selectedEmail.To, selectedEmail.Subject, selectedEmail.GeneratedReply)">Reply</button> <br />
+                <n />
+                <button class="reply-button" @onclick="(e) => SendEmail(selectedEmail.From, selectedEmail.To, selectedEmail.Subject, selectedEmail.GeneratedReply)">Send Reply</button> <br />
             }
             else
             {
@@ -83,10 +87,16 @@
         </div>
     </div>
 </div>
-<button @onclick="PreviousPage">Previous</button>
-<span> <strong>Page: </strong> @(pageIndex.ToString())</span>
-<button @onclick="NextPage">Next</button>
+    <div class="page-navigator">
+        <button @onclick="PreviousPage">Previous</button>
+        <span> <strong>Page: </strong> @(pageIndex.ToString())</span>
+        <button @onclick="NextPage">Next</button>
+    </div> 
 
+} else
+{
+    <p class="loading-message">Rendering...</p>
+}
 
 @code {
     private IList<Message> messages;
@@ -104,6 +114,9 @@
     private string email;
     private string userInput;
     private EmailMessage selectedEmail;
+    bool post_first_render = false;
+    bool loggedIn = true;
+    UserCredential credential;
 
     private void Submit(EmailMessage email)
     {
@@ -122,10 +135,26 @@
 
     protected override async Task OnInitializedAsync()
     {
-        api_key = Configuration["ChatGptKey"];
-        googleClientId = Configuration["GmailgoogleClientId"];
-        googleClientSecret = Configuration["GmailgoogleClientSecret"];
-        await LoadEmails();
+        if (post_first_render)
+        {
+            api_key = Configuration["ChatGptKey"];
+            googleClientId = Configuration["GmailgoogleClientId"];
+            googleClientSecret = Configuration["GmailgoogleClientSecret"];
+            await LoadEmails();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            api_key = Configuration["ChatGptKey"];
+            googleClientId = Configuration["GmailgoogleClientId"];
+            googleClientSecret = Configuration["GmailgoogleClientSecret"];
+            await LoadEmails();
+            post_first_render = true;
+            StateHasChanged();
+        }
     }
 
     public class EmailMessage
@@ -136,17 +165,38 @@
         public string SummarizedBody { get; set; }
         public string GeneratedReply { get; set; }
     }
+
     public static UserCredential Authorize(string clientId, string clientSecret, string[] scopes)
     {
 
         // Initiate authorization flow
         return GoogleWebAuthorizationBroker.AuthorizeAsync(
             new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
-            scopes,
+            scopes.Append("profile").ToArray(),
             "user",
             CancellationToken.None,
-            new FileDataStore("Gmail.API.Auth.Store")).Result;
+            new FileDataStore("Gmail.API.Auth.Store") // saves login ifo so future authentication is not required
+            ).Result;
     }
+    private void LogOut()
+    {
+        credential.RevokeTokenAsync(CancellationToken.None).Wait(); // remove the credential
+        credential = Authorize(googleClientId, googleClientSecret, scopes); // prompt for new account
+        // clear information from previous account
+        messages.Clear();
+        messageOnPage.Clear();
+        displayedMessages.Clear();
+        messageSummaries.Clear();
+        // api keys
+        api_key = Configuration["ChatGptKey"];
+        googleClientId = Configuration["GmailgoogleClientId"];
+        googleClientSecret = Configuration["GmailgoogleClientSecret"];
+        // load page and update
+        LoadEmails();
+        StateHasChanged();
+
+    }
+
 
     // displaying emails
     private async Task LoadEmails()
@@ -154,7 +204,9 @@
         loading = true;
         try
         {
-            UserCredential credential = Authorize(googleClientId, googleClientSecret, scopes);
+
+            credential = Authorize(googleClientId, googleClientSecret, scopes);
+            
 
             var gmailService = new GmailService(new BaseClientService.Initializer
                 {
@@ -222,7 +274,7 @@
         {
             foreach (var part in message.Payload.Parts)
             {
-                if (part.MimeType == "text/plain" && part.Body != null && part.Body.Data != null)
+                if ((part.MimeType == "text/plain" || part.MimeType == "text/html") && part.Body != null && part.Body.Data != null)
                 {
                     body = DecodeBody(part.Body);
                     break;
@@ -268,7 +320,7 @@
     {
         var body = GetMessageBody(message);
         string sysMsg = "You are a helpful email reader.";
-        string summed = await Chat(sysMsg, $"Summarize this email in less than 50 words{body}");
+        string summed = await Chat(sysMsg, $"Summarize this email in less than 50 words. Subject: {GetMessageSubject(message)} Body: {body}");
         return summed;
     }
     private async void GenerateReply(EmailMessage email, string response)
@@ -321,6 +373,7 @@
     {
         // Set selectedEmail to the clicked email
         selectedEmail = email;
+        userInput = "";
         Console.WriteLine("Selected email: " + email.Subject);
         StateHasChanged();
     }
@@ -347,7 +400,10 @@
             (string sender, string senderEmail) = ParseNameAndEmail(from);
             (string recipient, string recipientEmail) = ParseNameAndEmail(from);
 
-            UserCredential credential = Authorize(googleClientId, googleClientSecret, scopes);
+
+            credential = Authorize(googleClientId, googleClientSecret, scopes);
+            
+            
 
             // Construct MimeMessage
             var msg = new MimeKit.MimeMessage();
@@ -468,6 +524,9 @@
             return getSingleMessageRequest.Execute();
         }
     }
+
+
+
 }
 
 
