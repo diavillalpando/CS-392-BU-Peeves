@@ -13,6 +13,18 @@
 
 <h3>MBTA Vehicle Info</h3>
 
+<!-- Add a checkbox to show/hide the description -->
+<input type="checkbox" id="showDescription" class="show-description" />
+<label for="showDescription">Show Description</label>
+
+<!-- Add the description section -->
+<div class="description">
+    <p>This page allows you to get information about MBTA vehicles.</p>
+    <p>Simply choose a stop from the dropdown menu, then click 'Get Vehicle Details' to retrieve vehicle information.</p>
+    <p>A colored vehicle image is shown. This color describes the crowdedness of the vehicle. Green is near empty or no info, yellow is partially filled, red is almost nearly filled.</p>
+    <p>Optionally, you can hide off-campus stops by checking the checkbox.</p>
+</div>
+
 <form @onsubmit="GetVehicleInfo">
     <label for="Stops">Choose a stop:</label>
     <select name="Stops" id="Stops" @bind="SelectedStop">
