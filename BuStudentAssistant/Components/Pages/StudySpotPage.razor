@@ -1,10 +1,16 @@
 ﻿@page "/studySpotYelp/{studySpot_id}"
 @rendermode InteractiveServer
 @using Microsoft.EntityFrameworkCore
+@using Radzen
 @using Sy = StudySpotYelpNameSpace
 @using BuStudentAssistant.Data
 @using BuStudentAssistant.Models
 @using MongoDB.Driver
+@using Google.Apis.Gmail.v1
+@using Google.Apis.Gmail.v1.Data
+@using Google.Apis.Services
+@using Google.Apis.Util.Store
+@using Google.Apis.Auth.OAuth2
 @inject IConfiguration Configuration
 @inject IHttpClientFactory ClientFactory
 @inject HttpClient Http
@@ -31,6 +37,16 @@
         </div>
         
         <div id = "information">
+            <div>
+                @if(user_profile != null){
+                    <div class="user_info">
+                        <p>logged in as: @user_profile.EmailAddress</p>
+                        <RadzenButton Shade="Shade.Lighter" Click=@(args => LogOut()) Size="ButtonSize.ExtraSmall" Text="Switch Account" ButtonStyle="ButtonStyle.Danger" />
+                    </div>
+                }else{
+                    <RadzenButton Shade="Shade.Lighter" Click=@(args => LogIn()) Text="Log-in" ButtonStyle="ButtonStyle.Danger" />
+                }
+            </div>
             <div id = "busyScore_input_box">
                 @if(!busyScore_submitted){
                     <h5>How busy is it at @spot.Name?</h5>
@@ -47,24 +63,28 @@
             
             <p>@spot.Description</p>
             <hr>
-            <h3>Comments:</h3>
+            <h3>Comments: </h3>
             @if (spot_comments == null){
                 <div>loading comments...</div>
             }else{
-                
                 <ul id = "comment_box">
-                    <form method="post" @onsubmit="post_comment" @formname="comment-form">
-                        <input id = "comment_input_text" type="text" @bind-value="input_text">
-                        <input type="submit" value="Comment">
-                        <div class="stars">
-                            <input type="radio" name="rating4" value="1" @onchange="@(() => updateInputStars(1))"/>
-                            <input type="radio" name="rating4" value="2" @onchange="@(() => updateInputStars(2))"/>
-                            <input type="radio" name="rating4" value="3" @onchange="@(() => updateInputStars(3))" checked="checked"/>
-                            <input type="radio" name="rating4" value="4" @onchange="@(() => updateInputStars(4))"/>
-                            <input type="radio" name="rating4" value="5" @onchange="@(() => updateInputStars(5))"/>
-                            <i></i>
-                        </div>
-                    </form>
+                    @if(user_profile !=null){
+                        <form method="post" @onsubmit="post_comment" @formname="comment-form">
+                            <input id = "comment_input_text" type="text" @bind-value="input_text">
+                            <input type="submit" value="Comment">
+                            <div class="stars">
+                                <input type="radio" name="rating4" value="1" @onchange="@(() => updateInputStars(1))"/>
+                                <input type="radio" name="rating4" value="2" @onchange="@(() => updateInputStars(2))"/>
+                                <input type="radio" name="rating4" value="3" @onchange="@(() => updateInputStars(3))" checked="checked"/>
+                                <input type="radio" name="rating4" value="4" @onchange="@(() => updateInputStars(4))"/>
+                                <input type="radio" name="rating4" value="5" @onchange="@(() => updateInputStars(5))"/>
+                                <i></i>
+                            </div>
+                        </form>
+                    }else{
+                        <p>Please Log in to leave a comment</p><button  @onclick="LogIn">Log In</button>
+                    }
+                    
                     
                     
                     @foreach (var comment in spot_comments){
@@ -116,7 +136,8 @@ window.setImage = async (imageElementId, imageStream) => {
     public string? studySpot_id { get; set; }
     
     StudySpot spot;
-
+    Profile user_profile;
+    UserCredential? credential;
     List<Comment> spot_comments;
     List<BusyScore> spot_busyScores;
     Sy.GoogleMaps gmaps;
@@ -124,9 +145,40 @@ window.setImage = async (imageElementId, imageStream) => {
     bool busyScore_submitted = false;
     public string? input_text;
     public int input_stars;
-
     public int input_busyScore;
+    string[] scopes = new[] 
+    {
+        GmailService.ScopeConstants.GmailReadonly,
+        GmailService.ScopeConstants.GmailCompose,
+        GmailService.ScopeConstants.GmailSend
+    };
 
+    public static UserCredential Authorize(string clientId, string clientSecret, string[] scopes)
+    {
+        // Initiate authorization flow
+        return GoogleWebAuthorizationBroker.AuthorizeAsync(
+            new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
+            scopes.Append("profile").ToArray(),
+            "user",
+            CancellationToken.None,
+            new FileDataStore("Gmail.API.Auth.Store") // saves login ifo so future authentication is not required
+            ).Result;
+    }
+    private void LogOut()
+    {
+        credential.RevokeTokenAsync(CancellationToken.None).Wait(); // remove the credential
+        LogIn();
+        StateHasChanged();
+
+    }
+    private void LogIn(){
+        credential = Authorize(Configuration["GmailgoogleClientId"], Configuration["GmailgoogleClientSecret"], scopes);
+        var gmailService = new GmailService(new BaseClientService.Initializer
+                {
+                    HttpClientInitializer = credential
+                });
+        user_profile = gmailService.Users.GetProfile("me").Execute();
+    }
     private double minutesElapsedSince(DateTime d){
         return DateTime.Now.ToUniversalTime().Subtract(d).TotalMinutes;
     }
@@ -191,7 +243,7 @@ window.setImage = async (imageElementId, imageStream) => {
             Text = input_text,
             User_id = -99,
             Spot_id = spot._id,
-            User_Name = "Current User",
+            User_Name = user_profile.EmailAddress,
             Stars = input_stars
             };
         await dbContext.Comments.InsertOneAsync(newComment);
@@ -217,7 +269,7 @@ window.setImage = async (imageElementId, imageStream) => {
         gmaps = new Sy.GoogleMaps(Configuration, JS, Http, ClientFactory);
         spot = await dbContext.StudySpots.Find(s => s._id.ToString() == studySpot_id).FirstAsync();
         update_comments();
-        
+        LogIn();
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender) // Runs after the first time the page loads
