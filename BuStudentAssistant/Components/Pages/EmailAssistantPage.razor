@@ -22,7 +22,10 @@
 
 <h3>Email Assistant</h3>
 <h5>@email</h5>
-<button class="switch_account" @onclick="LogOut">Switch Accounts</button>
+@if (loading != true || post_first_render == true) // hiding switch button if the page is loading
+{
+    <button class="switch_account" @onclick="LogOut">Switch Accounts</button>
+}
 
 @if (post_first_render) { //initial rendering for the page
 <div class="container">
@@ -76,7 +79,7 @@
                 <strong>Generated Reply: </strong> @selectedEmail.GeneratedReply <br />
                 <div></div>
                 <input class="user-input" type="text" @bind="userInput" />
-                <button class="generate-reply-button" @onclick="@(e => Submit(selectedEmail))">Generate Reply</button>
+                <button class="generate-reply-button" @onclick="(e) => Submit(selectedEmail)">Generate Reply</button>
                 <n />
                 <button class="reply-button" @onclick="(e) => SendEmail(selectedEmail.From, selectedEmail.To, selectedEmail.Subject, selectedEmail.GeneratedReply)">Send Reply</button> <br />
                 <br />    
@@ -92,6 +95,7 @@
         </div>
     </div>
 </div>
+    <!--Page display and navigation -->
     <div class="page-navigator">
         <button @onclick="PreviousPage">Previous</button>
         <span> <strong>Page: @(pageIndex.ToString()) </strong> </span>
@@ -104,30 +108,31 @@
 }
 
 @code {
-    private IList<Message> messages;
-    private List<Message> displayedMessages;
-    private List<EmailMessage> messageSummaries = new List<EmailMessage>();
-    private List<EmailMessage> messageOnPage = new List<EmailMessage>();
-    private int pageIndex = 1;
-    private bool loading = true;
-    private bool error = false;
-    private const int MaxDisplayedMessages = 5;
+    private IList<Message> messages;// stores emails received from api
+    private List<EmailMessage> messageSummaries = new List<EmailMessage>(); // all of the processed emails
+    private List<EmailMessage> messageOnPage = new List<EmailMessage>(); // the emails on the screen
+    private int pageIndex = 1; // current page
+    bool post_first_render = false; // loading when switching accounts
+    private bool loading = true; // loading more emails from current account
+    private bool error = false; 
+    private const int MaxDisplayedMessages = 5; // the amount of emails displated on screen
+    // api keys and client secret
     private string? api_key;
     string? googleClientId;
     string? googleClientSecret;
-    private static string errorMessage= "";
-    private string? email;
-    private string? userInput;
-    private EmailMessage? selectedEmail;
-    bool post_first_render = false;
-    UserCredential? credential;
 
-    private void Submit(EmailMessage email)
+    private static string errorMessage= "";
+    private string? email; // email being viewed
+    private string? userInput; // input for prompt used for generating reply
+    private EmailMessage? selectedEmail; // emai being selected to view summary and generate reply
+
+    UserCredential? credential; // credential for gmail api
+
+    private void Submit(EmailMessage email) // updating user input to prompt when generating reply
     {
         GenerateReply(email, userInput);
         StateHasChanged();
     }
-    private void UpdateUserInput(ChangeEventArgs e) => userInput = e.Value.ToString();
 
     string[] scopes = new[] 
     {
@@ -161,6 +166,7 @@
         }
     }
 
+    // class for storing information of an email
     public class EmailMessage
     {
         public string From { get; set; }
@@ -173,7 +179,7 @@
     public static UserCredential Authorize(string clientId, string clientSecret, string[] scopes)
     {
 
-        // Initiate authorization flow
+        // Initiate authorization
         return GoogleWebAuthorizationBroker.AuthorizeAsync(
             new ClientSecrets { ClientId = clientId, ClientSecret = clientSecret },
             scopes.Append("profile").ToArray(),
@@ -182,25 +188,28 @@
             new FileDataStore("Gmail.API.Auth.Store") // saves login ifo so future authentication is not required
             ).Result;
     }
+
+    // logs the user out of the current gmail account and uses Oauth to get new login information
     private void LogOut()
     {
-        credential.RevokeTokenAsync(CancellationToken.None).Wait(); // remove the credential
+        if (credential != null)
+        {
+            credential.RevokeTokenAsync(CancellationToken.None).Wait(); // remove the credential
+            credential = null;
+        }
         credential = Authorize(googleClientId, googleClientSecret, scopes); // prompt for new account
-                                                                            // clear information from previous account
+        // clear information from previous account
         messages.Clear();
         messageOnPage.Clear();
-        displayedMessages.Clear();
         messageSummaries.Clear();
         pageIndex = 1;
         selectedEmail = null;
         // load page and update
         LoadEmails();
         StateHasChanged();
-
     }
 
-
-    // displaying emails
+    // loading and updating displayed emails
     private async Task LoadEmails()
     {
         loading = true;
@@ -217,13 +226,14 @@
             var profile = gmailService.Users.GetProfile("me").Execute();
             email = profile.EmailAddress;
 
+            // check if new messages need to be loaded
             if (pageIndex * MaxDisplayedMessages > messageSummaries.Count)
             {
                 EmailGetter emailGetter = new EmailGetter(credential);
                 messages = emailGetter.GetMessages("me").Skip((pageIndex - 1) * MaxDisplayedMessages).Take(MaxDisplayedMessages).ToList();
-                displayedMessages = messages.ToList();
 
-                foreach (var message in displayedMessages)
+                // use gmail to generate summary and store information in a list of class EmailMessage
+                foreach (var message in messages)
                 {
                     messageSummaries.Add(new EmailMessage
                         {
@@ -235,12 +245,11 @@
                 }
             }
             messageOnPage = messageSummaries.Skip((pageIndex - 1) * MaxDisplayedMessages).Take(MaxDisplayedMessages).ToList();
-
         }
         catch (Exception ex)
         {
             error = true;
-            errorMessage = ex.Message.ToString();
+            errorMessage = ex.Message.ToString() + " Please refresh this page";
         }
         finally
         {
@@ -251,16 +260,31 @@
 
     private void NextPage()
     {
-        pageIndex++;
-        messageOnPage.Clear(); // Clear previous messages
-        LoadEmails();
+        if (credential == null)
+        {
+            LogOut();
+        }
+        else
+        {
+            pageIndex++;
+            messageOnPage.Clear(); // Clear previous messages
+            LoadEmails();
+        }
+
     }
 
     private void PreviousPage()
     {
-        pageIndex--;
-        messageOnPage.Clear(); // Clear previous messages
-        LoadEmails();
+        if (credential == null)
+        {
+            LogOut();
+        }
+        else
+        {
+            pageIndex--;
+            messageOnPage.Clear(); // Clear previous messages
+            LoadEmails();
+        }
     }
 
 
@@ -290,13 +314,14 @@
         return null;
     }
 
+    // function to remove long blocks of metadata
     private static string parseLong(string s)
     {
         string[] blocks = s.Split(' ');
         string final = "";
         foreach (string block in blocks)
         {
-            if (block.Length <= 15)
+            if (block.Length <= 15 )
             {
                 final += block;    
             }
@@ -335,18 +360,20 @@
         return subjectHeader?.Value;
     }
 
+    // use chatGpt to generate a summary
     private async Task<string> GetMessageSummary(Message message)
     {
         var body = GetMessageBody(message);
-        string sysMsg = "You are a helpful email reader.";
-        string summed = await Chat(sysMsg, $"Summarize this email in less than 50 words. Subject: {GetMessageSubject(message)} Body: {body}");
+        string sysMsg = "You are a helpful email reader. Rewrite the email message as if you are the sender.";
+        string summed = await Chat(sysMsg, $"Summarize this email in less than 50 words. Subject: {GetMessageSubject(message)} Body: {parseLong(body)}. Do not reiterate the Subject.");
         return summed;
     }
+    // use ChatGpt to generate a response to an email based on the user prompt
     private async void GenerateReply(EmailMessage email, string response)
     {
-        string sysMsg = "You are a helpful email writer that focuses on ensuring the main point is told. Only focus on the main body of the email.";
+        string sysMsg = "You are a helpful email writer that focuses on ensuring the main point is told. Write the response as if the email is talking to you.";
         string summary = email.SummarizedBody;
-        string generatedEmail = await Chat(sysMsg, $"Write a reply to saying {response} to {summary}");
+        string generatedEmail = await Chat(sysMsg, $"Write a reply saying {response} to {summary}. Do not reiterate the subject.");
         email.GeneratedReply = generatedEmail;
     }
 
@@ -358,7 +385,7 @@
             {
                 return "Failed to read the body of the message.";    
             }
-            var openAIService = new OpenAI.GPT3.Managers.OpenAIService(new OpenAiOptions()
+            var openAIService = new OpenAI.GPT3.Managers.OpenAIService(new OpenAiOptions() // initiate OpenAi Service
                 {
                     ApiKey = api_key
                 });
@@ -366,8 +393,8 @@
             {
                 Messages = new List<ChatMessage>
                 {
-                    ChatMessage.FromSystem(system),
-                    ChatMessage.FromUser(prompt)
+                    ChatMessage.FromSystem(system),// message for the system telling it what to do
+                    ChatMessage.FromUser(prompt) // the prompt sent to ChatGPT
                 },
                 Model = Models.ChatGpt3_5Turbo,
                 MaxTokens = 100
@@ -379,7 +406,7 @@
             }
             else
             {
-                return ($"Completion result was not successful, the prompt was: {prompt}");    
+                return (await Chat(system, prompt.Substring(0,100)));    
             }
         }
         catch (Exception ex)
@@ -388,13 +415,22 @@
         }
 
     }
+
     private void ToggleEmailDetails(EmailMessage email)
     {
         // Set selectedEmail to the clicked email
-        selectedEmail = email;
-        errorMessage = "";
-        userInput = "";
-        Console.WriteLine("Selected email: " + email.Subject);
+        if (credential == null)
+        {
+            LogOut();
+        }
+        else
+        {
+            selectedEmail = email;
+            errorMessage = "";
+            userInput = "";
+            Console.WriteLine("Selected email: " + email.Subject);
+        }
+
         StateHasChanged();
     }
     // sending emails
@@ -415,14 +451,11 @@
                 return;
             }
 
-            // remove braces
-
+            // remove braces to get email address and name
             (string sender, string senderEmail) = ParseNameAndEmail(from);
             (string recipient, string recipientEmail) = ParseNameAndEmail(from);
 
-
             credential = Authorize(googleClientId, googleClientSecret, scopes);
-            
             
 
             // Construct MimeMessage
@@ -488,8 +521,8 @@
             return ("", input);
         }
     }
-
-        static string Base64UrlEncode(string input)
+    // Convert MimeMessage to RFC822 formatted string
+    static string Base64UrlEncode(string input)
         {
             byte[] inputBytes = Encoding.UTF8.GetBytes(input);
             return Convert.ToBase64String(inputBytes)
