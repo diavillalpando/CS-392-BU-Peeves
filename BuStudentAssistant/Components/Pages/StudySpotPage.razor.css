@@ -122,6 +122,16 @@
     background-color: #ffffff95;
     text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.9); 
 }
+.user_info{
+    display: flex;
+    margin-right: 2em;
+    padding-bottom: 1em;
+    justify-content: space-between;
+    vertical-align: end;
+    color: rgb(227, 71, 71);
+    font-size: 1em;
+}
+
 
 .fa-user{
     color: rgb(0, 186, 0);
