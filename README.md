@@ -1,4 +1,4 @@
-# BU Peeves App
+# BU Student Assistant
 
 #### Names:
 - Dia Villalpando
