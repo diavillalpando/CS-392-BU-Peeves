@@ -63,27 +63,35 @@ https://www.mongodb.com/try/download/community-kubernetes-operator
 Install pymongo:
 https://pypi.org/project/pymongo/
 
-Install Radzen.Blazor:
-https://blazor.radzen.com/docs/guides/getting-started/installation.html
-
 ```bash
 pip install pymongo
 ```
 
-Once installed open MongoDBCompass.
+#### For the following CD into the BuStudentAssistant folder:
 
-Go to Terminal/Command Prompt, find [startServer.py](http://startserver.py/) and run:
+Drag "appsettings.json" and "appsettings.Development.json" into the folder
+
+Go to Terminal/Command Prompt, find [startServer.py](http://startserver.py/) and run to start the mongoDB server:
 
 ```bash
 python startServer.py 
 ```
 
+Open MongoDBCompass.
+
 to connect to the MongoDBCompass.
 
-Connect to the mongodb://localhost:27017. There’s a database called LoginDb and a Users folder. That’s where the user information gets stored.
+Connect to the mongodb://localhost:27017. There’s a database called LoginDb. That’s where information gets stored.
 
-Populating the server:
+#### Populating the server:
 
 ```bash
 python populateServerStudySpots.py
 ```
+
+#### To start the app:
+- From windows: run the app on visual studio
+- From mac: on the BuStudentAssistant folder:
+  ```bash
+  dotnet watch
+  ```
